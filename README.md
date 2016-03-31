@@ -1,4 +1,4 @@
-#Lessgo Web Framework's expansion module
+#Lessgo's expansion module
 
 Lessgo 是一款 Go 语言编写的 web 快速开发框架。它基于开源框架 echo v2 进行二次开发，旨在实现一个简单、稳定、高效、灵活的 web 框架。在此感谢 [echo](https://github.com/labstack/echo)。它最显著的特点是支持Admin管理后台动态配置模块与操作的启用状态、中间件等。
 
