@@ -1,4 +1,4 @@
-#Lessgo's expansion module
+#Lessgo's expansion module[![GoDoc](https://godoc.org/github.com/lessgo/lessgo?status.svg)](https://godoc.org/github.com/lessgo/lessgo)[![GitHub release](https://img.shields.io/github/release/lessgo/lessgo.svg)](https://github.com/lessgo/lessgo/releases)
 
 
 ![Lessgo Favicon](https://github.com/lessgo/lessgo/raw/master/doc/favicon.png)
@@ -87,6 +87,12 @@ $ lessgo run
 ├─Logger 运行日志输出目录
 └─Main.go 应用入口文件
 ```
+
+##框架相关
+
+* 核心框架：[lessgo](https://github.com/lessgo/lessgo)
+* 框架扩展：[lessgoext](https://github.com/lessgo/lessgoext)
+* 项目Demo：[demo](https://github.com/lessgo/lessgoext)
 
 
 
