@@ -12,7 +12,7 @@
 // License for the specific language governing permissions and limitations
 // under the License.
 
-package deploy
+package main
 
 import (
 	"bytes"
@@ -24,7 +24,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/howeyc/fsnotify"
+	"github.com/lessgo/lessgoext/lessgo/fsnotify"
 )
 
 var (

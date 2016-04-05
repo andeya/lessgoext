@@ -1,5 +1,5 @@
-// ThinkGo 部署工具，支持新建项目，支持热编译并运行程序。
-package deploy
+// Lessgo 部署工具，支持新建项目，支持热编译并运行程序。
+package main
 
 import (
 	"flag"
@@ -92,31 +92,31 @@ func Deploy() {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "thinkgo: unknown subcommand %q\nRun 'thinkgo help' for usage.\n", args[0])
+	fmt.Fprintf(os.Stderr, "lessgo: unknown subcommand %q\nRun 'lessgo help' for usage.\n", args[0])
 	os.Exit(2)
 }
 
-var usageTemplate = `ThinkGo is a tool for managing thinkgo framework.
+var usageTemplate = `this is a tool for managing lessgo framework.
 
 Usage:
 
-	thinkgo command [arguments]
+	lessgo command [arguments]
 
 The commands are:
 {{range .}}{{if .Runnable}}
     {{.Name | printf "%-11s"}} {{.Short}}{{end}}{{end}}
 
-Use "thinkgo help [command]" for more information about a command.
+Use "lessgo help [command]" for more information about a command.
 
 Additional help topics:
 {{range .}}{{if not .Runnable}}
     {{.Name | printf "%-11s"}} {{.Short}}{{end}}{{end}}
 
-Use "thinkgo help [topic]" for more information about that topic.
+Use "lessgo help [topic]" for more information about that topic.
 
 `
 
-var helpTemplate = `{{if .Runnable}}usage: thinkgo {{.UsageLine}}
+var helpTemplate = `{{if .Runnable}}usage: lessgo {{.UsageLine}}
 
 {{end}}{{.Long | trim}}
 `
@@ -144,8 +144,8 @@ func help(args []string) {
 		return
 	}
 	if len(args) != 1 {
-		fmt.Fprintf(os.Stdout, "usage: thinkgo help command\n\nToo many arguments given.\n")
-		os.Exit(2) // failed at 'thinkgo help'
+		fmt.Fprintf(os.Stdout, "usage: lessgo help command\n\nToo many arguments given.\n")
+		os.Exit(2) // failed at 'lessgo help'
 	}
 
 	arg := args[0]
@@ -158,6 +158,6 @@ func help(args []string) {
 		}
 	}
 
-	fmt.Fprintf(os.Stdout, "Unknown help topic %#q.  Run 'thinkgo help'.\n", arg)
-	os.Exit(2) // failed at 'thinkgo help cmd'
+	fmt.Fprintf(os.Stdout, "Unknown help topic %#q.  Run 'lessgo help'.\n", arg)
+	os.Exit(2) // failed at 'lessgo help cmd'
 }
