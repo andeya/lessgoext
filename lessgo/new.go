@@ -307,11 +307,11 @@ import (
 
 func init() {
 	lessgo.RootRouter(
-		lessgo.SubRouter("/admin", "后台管理", "管理整个项目的运行",
-			lessgo.Any("后台首页", "后台管理的首页", Admin.IndexHandle),
-			lessgo.SubRouter("/login", "后台登陆", "登陆管理后台",
-				lessgo.Get("后台登陆", "登陆管理后台", Login.IndexHandle, "/:user/:password"),
-				lessgo.Post("后台登陆", "登陆管理后台", Login.IndexHandle, "/:user/:password"),
+		lessgo.SubRouter("/admin", "后台管理",
+			lessgo.Any("index", "后台首页", Admin.IndexHandle),
+			lessgo.SubRouter("/login", "后台登陆",
+				lessgo.Get(":user/:password", "后台登陆", Login.IndexHandle),
+				lessgo.Post(":user/:password", "后台登陆", Login.IndexHandle),
 			),
 		),
 	)
@@ -338,17 +338,26 @@ func IndexHandle(ctx lessgo.Context) error {
 var AdminLoginIndexHandle = `package Login
 
 import (
-	"github.com/lessgo/lessgo"
+	. "github.com/lessgo/lessgo"
 )
 
-func IndexHandle(ctx lessgo.Context) error {
-	return ctx.Render(200,
-		"SystemView/Admin/Login/index.tpl",
-		map[string]interface{}{
-			"name":       ctx.Param("user"),
-			"password":   ctx.Param("password"),
-			"repeatfunc": repeatfunc,
-		})
+var IndexHandle = DescHandler{
+	Description: "后台管理登录操作",
+	Success:     "200 | 返回输入的用户名和密码",
+	Failure:     "",
+	Param: map[string]string{
+		"user":     "string | 用户名",
+		"password": "string | 密码",
+	},
+	Handler: func(ctx Context) error {
+		return ctx.Render(200,
+			"SystemView/Admin/Login/index.tpl",
+			map[string]interface{}{
+				"name":       ctx.Param("user"),
+				"password":   ctx.Param("password"),
+				"repeatfunc": repeatfunc,
+			})
+	},
 }
 `
 
@@ -387,8 +396,8 @@ import (
 
 func init() {
 	lessgo.RootRouter(
-		lessgo.SubRouter("/home", "前台", "前台应用",
-			lessgo.Get("首页", "首页", Home.IndexHandle).Use("显示Header"),
+		lessgo.SubRouter("/home", "前台",
+			lessgo.Get("index", "首页", Home.IndexHandle, "显示Header"),
 		).Use("打印一些东西"),
 	)
 }
