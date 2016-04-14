@@ -16,15 +16,12 @@ var (
 	apidoc *Swagger
 )
 
-func init() {
-	SetSwagger()
+func Init() {
 	lessgo.DefLessgo.AppConfig.CrossDomain = true
 	lessgo.MustRouter("/swagger.json", []string{lessgo.GET}, func(c lessgo.Context) error {
 		return c.JSON(200, apidoc)
 	})
-}
 
-func SetSwagger() {
 	files_ch := make(chan *FileInfo, 100)
 	fp := filepath.Clean(filepath.Join(os.Getenv("GOPATH"), `\src\github.com\lessgo\lessgoext\swagger\swagger-ui`))
 	go walkFiles(fp, "", files_ch) //在一个独立的 goroutine 中遍历文件
@@ -64,7 +61,6 @@ func SetSwagger() {
 		// Definitions:         map[string]Definition{},
 		// ExternalDocs:        map[string]string{},
 	}
-
 	for _, vr := range lessgo.DefLessgo.VirtRouter.Progeny() {
 		if vr.Type() != lessgo.HANDLER {
 			continue

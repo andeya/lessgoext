@@ -308,7 +308,7 @@ import (
 func init() {
 	lessgo.RootRouter(
 		lessgo.SubRouter("/admin", "后台管理",
-			lessgo.Any("index", "后台首页", Admin.IndexHandle),
+			lessgo.Any("/index", "后台首页", Admin.IndexHandle),
 			lessgo.SubRouter("/login", "后台登陆",
 				lessgo.Get(":user/:password", "后台登陆", Login.IndexHandle),
 				lessgo.Post(":user/:password", "后台登陆", Login.IndexHandle),
@@ -331,7 +331,7 @@ func IndexHandle(ctx lessgo.Context) error {
 	ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
 	ctx.Logger().Info("获取参数a = %v", ctx.QueryParam("a"))
 	time.Sleep(1e9)
-	return ctx.String(200, "这里是后台首页")
+	return ctx.JSON(200, "这里是后台首页")
 }
 `
 
@@ -342,10 +342,23 @@ import (
 )
 
 var IndexHandle = DescHandler{
-	Desc: "后台管理登录操作",
-	Param: map[string]string{
-		"user":     "string | 用户名",
-		"password": "string | 密码",
+	Desc:     "后台管理登录操作",
+	Produces: []string{"application/html"},
+	Params: []Param{
+		{
+			Name:     "user",
+			In:       "path",
+			Required: true,
+			Format:   "",
+			Desc:     "用户名",
+		},
+		{
+			Name:     "password",
+			In:       "path",
+			Required: true,
+			Format:   "",
+			Desc:     "密码",
+		},
 	},
 	Handler: func(ctx Context) error {
 		return ctx.Render(200,
@@ -424,6 +437,7 @@ import (
 	"github.com/lessgo/lessgo"
 	. "github.com/lessgo/lessgo/engine/standard"
 	// . "github.com/lessgo/lessgo/engine/fasthttp"
+	"github.com/lessgo/lessgoext/swagger"
 
 	_ "[[[importPrefix]]]/BusinessAPI"
 	_ "[[[importPrefix]]]/Common/Middleware"
@@ -431,6 +445,7 @@ import (
 )
 
 func main() {
+	swagger.Init()
 	lessgo.SetHome("/home")
 	lessgo.Run(WithConfig)
 }
