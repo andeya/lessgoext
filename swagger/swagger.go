@@ -1,8 +1,10 @@
 package swagger
 
 import (
+	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,30 +12,35 @@ import (
 	"strings"
 
 	"github.com/lessgo/lessgo"
+	"github.com/lessgo/lessgo/utils"
 )
 
 var (
 	apidoc *Swagger
+	scheme = func() string {
+		if lessgo.AppConfig.Listen.EnableHTTPS {
+			return "https"
+		} else {
+			return "http"
+		}
+	}()
+	jsonUrl = scheme + "://" + path.Join(lessgo.Lessgo().AppConfig.Info.Host, "swagger.json")
 )
 
 func Init() {
-	lessgo.DefLessgo.AppConfig.CrossDomain = true
-	lessgo.MustRouter("/swagger.json", []string{lessgo.GET}, func(c lessgo.Context) error {
+	// 强制开启允许跨域访问
+	lessgo.Lessgo().AppConfig.CrossDomain = true
+	lessgo.Logger().Info("AppConfig.CrossDomain setting to true.")
+	lessgo.BaseRouter("/swagger.json", []string{lessgo.GET}, func(c lessgo.Context) error {
 		return c.JSON(200, apidoc)
 	})
 
-	files_ch := make(chan *FileInfo, 100)
-	fp := filepath.Clean(filepath.Join(os.Getenv("GOPATH"), `\src\github.com\lessgo\lessgoext\swagger\swagger-ui`))
-	go walkFiles(fp, "", files_ch) //在一个独立的 goroutine 中遍历文件
-	os.MkdirAll("Swagger", os.ModeDir)
-	writeFiles("Swagger", files_ch)
-
-	var scheme string
-	if lessgo.AppConfig.Listen.EnableHTTPS {
-		scheme = "https"
-	} else {
-		scheme = "http"
+	if !utils.FileExists("Swagger") {
+		// 拷贝swagger文件至当前目录下
+		CopySwaggerFiles()
 	}
+
+	// 生成swagger依赖的json对象
 	apidoc = &Swagger{
 		Version: SwaggerVersion,
 		Info: &Info{
@@ -61,7 +68,7 @@ func Init() {
 		// Definitions:         map[string]Definition{},
 		// ExternalDocs:        map[string]string{},
 	}
-	for _, vr := range lessgo.DefLessgo.VirtRouter.Progeny() {
+	for _, vr := range lessgo.Lessgo().VirtRouter.Progeny() {
 		if vr.Type() != lessgo.HANDLER {
 			continue
 		}
@@ -123,16 +130,13 @@ type FileInfo struct {
 	Handle  *os.File
 }
 
-//复制文件数据
-func ioCopy(srcHandle *os.File, dstPth string) (err error) {
-	dstHandle, err := os.OpenFile(dstPth, os.O_CREATE|os.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer srcHandle.Close()
-	defer dstHandle.Close()
-	_, err = io.Copy(dstHandle, srcHandle)
-	return err
+// 拷贝swagger文件至当前目录下
+func CopySwaggerFiles() {
+	files_ch := make(chan *FileInfo, 100)
+	fp := filepath.Clean(filepath.Join(os.Getenv("GOPATH"), `\src\github.com\lessgo\lessgoext\swagger\swagger-ui`))
+	go walkFiles(fp, "", files_ch) //在一个独立的 goroutine 中遍历文件
+	os.MkdirAll("Swagger", os.ModeDir)
+	writeFiles("Swagger", files_ch)
 }
 
 //遍历目录，将文件信息传入通道
@@ -190,9 +194,31 @@ func writeFiles(dstDir string, c <-chan *FileInfo) {
 				}
 			}
 		}
-		f.Handle.Close()
 	}
 	os.Chdir("../")
+}
+
+//复制文件数据
+func ioCopy(srcHandle *os.File, dstPth string) (err error) {
+	defer srcHandle.Close()
+	dstHandle, err := os.OpenFile(dstPth, os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer dstHandle.Close()
+
+	stat, _ := srcHandle.Stat()
+	if stat.Name() == "index.html" {
+		b, err := ioutil.ReadAll(srcHandle)
+		if err != nil {
+			return err
+		}
+		b = bytes.Replace(b, []byte("{{{JSON_URL}}}"), []byte(jsonUrl), -1)
+		_, err = io.Copy(dstHandle, bytes.NewBuffer(b))
+		return err
+	}
+	_, err = io.Copy(dstHandle, srcHandle)
+	return err
 }
 
 func build(value interface{}) string {
