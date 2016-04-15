@@ -84,7 +84,7 @@ func Init() {
 				OperationId: vr.Id(),
 				Consumes:    vr.Produces(),
 				Produces:    vr.Produces(),
-				// Parameters:  []Parameter{},
+				// Parameters:  []*Parameter{},
 				Responses: map[string]*Resp{
 					"200": {Description: "Successful operation"},
 					"400": {Description: "Invalid status value"},
@@ -98,11 +98,28 @@ func Init() {
 					Name:        param.Name,
 					Description: param.Desc,
 					Required:    param.Required,
-					Type:        build(param.Format),
 					// Items:       &Items{},
 					// Schema:      &Schema{},
-					Format:  fmt.Sprintf("%T", param.Format),
-					Default: param.Format,
+				}
+				typ := build(param.Format)
+				if typ == "object" {
+					ref := strings.Replace(vr.Path()[1:]+param.Name, "/", "__", -1)
+					p.Schema = &Schema{
+						Ref: "#/definitions/" + ref,
+					}
+					def := &Definition{
+						Type: typ,
+						Xml:  &Xml{Name: ref},
+					}
+					def.Properties = properties(param.Format)
+					if apidoc.Definitions == nil {
+						apidoc.Definitions = map[string]*Definition{}
+					}
+					apidoc.Definitions[ref] = def
+				} else {
+					p.Type = typ
+					p.Format = fmt.Sprintf("%T", param.Format)
+					p.Default = param.Format
 				}
 				o.Parameters = append(o.Parameters, p)
 			}
@@ -110,6 +127,41 @@ func Init() {
 		}
 		apidoc.Paths[createPath(vr)] = opera
 	}
+}
+
+func properties(obj interface{}) map[string]*Property {
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	ps := map[string]*Property{}
+	if v.Kind() == reflect.Map {
+		kvs := v.MapKeys()
+		for _, kv := range kvs {
+			val := v.MapIndex(kv).Interface()
+			p := &Property{
+				Type:    build(val),
+				Format:  fmt.Sprintf("%T", val),
+				Default: val,
+			}
+			ps[kv.String()] = p
+		}
+		return ps
+	}
+	if v.Kind() == reflect.Struct {
+		num := v.NumField()
+		for i := 0; i < num; i++ {
+			val := v.Field(i).Interface()
+			p := &Property{
+				Type:    build(val),
+				Format:  fmt.Sprintf("%T", val),
+				Default: val,
+			}
+			ps[v.Type().Field(i).Name] = p
+		}
+		return ps
+	}
+	return nil
 }
 
 func createPath(vr *lessgo.VirtRouter) string {

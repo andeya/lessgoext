@@ -76,7 +76,7 @@ type (
 	}
 	Definition struct {
 		Type       string               `json:"type,omitempty"` // "object"
-		Properties map[string]*Property `json:"Properties,omitempty"`
+		Properties map[string]*Property `json:"properties,omitempty"`
 		Xml        *Xml                 `json:"xml,omitempty"`
 	}
 	Property struct {
