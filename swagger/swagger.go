@@ -72,7 +72,7 @@ func Init() {
 		if vr.Type() != lessgo.HANDLER {
 			continue
 		}
-		opera := map[string]*Opera{}
+		operas := map[string]*Opera{}
 		for _, method := range vr.Methods() {
 			if method == lessgo.CONNECT || method == lessgo.TRACE {
 				continue
@@ -123,9 +123,16 @@ func Init() {
 				}
 				o.Parameters = append(o.Parameters, p)
 			}
-			opera[strings.ToLower(method)] = o
+			operas[strings.ToLower(method)] = o
 		}
-		apidoc.Paths[createPath(vr)] = opera
+		pid := createPath(vr)
+		if _operas, ok := apidoc.Paths[pid]; ok {
+			for k, v := range operas {
+				_operas[k] = v
+			}
+		} else {
+			apidoc.Paths[pid] = operas
+		}
 	}
 }
 
