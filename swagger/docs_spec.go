@@ -48,15 +48,16 @@ type (
 		Security    []map[string][]string `json:"security,omitempty"`
 	}
 	Parameter struct {
-		In               string  `json:"in"`
-		Name             string  `json:"name"`
-		Description      string  `json:"description"`
-		Required         bool    `json:"required"`
-		Type             string  `json:"type,omitempty"` // "array"|"integer"|"object"
-		Items            *Items  `json:"items,omitempty"`
-		Schema           *Schema `json:"schema,omitempty"`
-		CollectionFormat string  `json:"collectionFormat,omitempty"` // "multi"
-		Format           string  `json:"format,omitempty"`           // "int64"
+		In               string      `json:"in"`
+		Name             string      `json:"name"`
+		Description      string      `json:"description"`
+		Required         bool        `json:"required"`
+		Type             string      `json:"type,omitempty"` // "array"|"integer"|"object"
+		Items            *Items      `json:"items,omitempty"`
+		Schema           *Schema     `json:"schema,omitempty"`
+		CollectionFormat string      `json:"collectionFormat,omitempty"` // "multi"
+		Format           string      `json:"format,omitempty"`           // "int64"
+		Default          interface{} `json:"default,omitempty"`
 	}
 	Items struct {
 		Type    string      `json:"type"` // "string"

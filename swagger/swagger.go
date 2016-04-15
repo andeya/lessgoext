@@ -101,7 +101,8 @@ func Init() {
 					Type:        build(param.Format),
 					// Items:       &Items{},
 					// Schema:      &Schema{},
-					Format: fmt.Sprintf("%T", param.Format),
+					Format:  fmt.Sprintf("%T", param.Format),
+					Default: param.Format,
 				}
 				o.Parameters = append(o.Parameters, p)
 			}
