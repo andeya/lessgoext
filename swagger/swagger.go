@@ -28,12 +28,15 @@ var (
 )
 
 func Init() {
-	// 强制开启允许跨域访问
-	lessgo.Lessgo().AppConfig.CrossDomain = true
 	lessgo.Logger().Info("AppConfig.CrossDomain setting to true.")
-	lessgo.BaseRouter("/swagger.json", []string{lessgo.GET}, func(c lessgo.Context) error {
-		return c.JSON(200, apidoc)
-	})
+	lessgo.RootRouter(lessgo.Get(
+		"/swagger.json", "swagger", func(c lessgo.Context) error {
+			// 强制开启允许跨域访问
+			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
+			// 返回api配置
+			return c.JSON(200, apidoc)
+		},
+	))
 
 	if !utils.FileExists("Swagger") {
 		// 拷贝swagger文件至当前目录下
