@@ -72,7 +72,7 @@ func Init() {
 		// ExternalDocs:        map[string]string{},
 	}
 	for _, vr := range lessgo.Lessgo().VirtRouter.Progeny() {
-		if vr.Type() != lessgo.HANDLER {
+		if vr.Type != lessgo.HANDLER {
 			continue
 		}
 		operas := map[string]*Opera{}
@@ -82,9 +82,9 @@ func Init() {
 			}
 			o := &Opera{
 				Tags:        []string{"/:"},
-				Summary:     vr.Name(),
+				Summary:     vr.Name,
 				Description: vr.Description(),
-				OperationId: vr.Id(),
+				OperationId: vr.Id,
 				Consumes:    vr.Produces(),
 				Produces:    vr.Produces(),
 				// Parameters:  []*Parameter{},
