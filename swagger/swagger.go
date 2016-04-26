@@ -28,11 +28,11 @@ var (
 )
 
 func Init() {
-	lessgo.AllowCrossDomain("/swagger.json")
+	if !lessgo.AppConfig.CrossDomain {
+		lessgo.Logger().Warn("If you want to use swagger, please set crossdomain to true.")
+	}
 	lessgo.RootRouter(lessgo.Get(
 		"/swagger.json", "swagger", func(c lessgo.Context) error {
-			// 强制开启允许跨域访问
-			c.Response().Header().Set("Access-Control-Allow-Origin", "*")
 			// 返回api配置
 			return c.JSON(200, apidoc)
 		},
