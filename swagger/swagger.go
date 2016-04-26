@@ -28,7 +28,7 @@ var (
 )
 
 func Init() {
-	lessgo.Logger().Info("AppConfig.CrossDomain setting to true.")
+	lessgo.AllowCrossDomain("/swagger.json")
 	lessgo.RootRouter(lessgo.Get(
 		"/swagger.json", "swagger", func(c lessgo.Context) error {
 			// 强制开启允许跨域访问
