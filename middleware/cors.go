@@ -12,34 +12,34 @@ type (
 	// CORSConfig defines the config for CORS middleware.
 	CORSConfig struct {
 		// AllowOrigin defines a list of origins that may access the resource.
-		// Optional with default value as []string{"*"}.
+		// Optional, with default value as []string{"*"}.
 		AllowOrigins []string
 
 		// AllowMethods defines a list methods allowed when accessing the resource.
 		// This is used in response to a preflight request.
-		// Optional with default value as `DefaultCORSConfig.AllowMethods`.
+		// Optional, with default value as `DefaultCORSConfig.AllowMethods`.
 		AllowMethods []string
 
 		// AllowHeaders defines a list of request headers that can be used when
 		// making the actual request. This in response to a preflight request.
-		// Optional with default value as []string{}.
+		// Optional, with default value as []string{}.
 		AllowHeaders []string
 
 		// AllowCredentials indicates whether or not the response to the request
 		// can be exposed when the credentials flag is true. When used as part of
 		// a response to a preflight request, this indicates whether or not the
 		// actual request can be made using credentials.
-		// Optional with default value as false.
+		// Optional, with default value as false.
 		AllowCredentials bool
 
 		// ExposeHeaders defines a whitelist headers that clients are allowed to
 		// access.
-		// Optional with default value as []string{}.
+		// Optional, with default value as []string{}.
 		ExposeHeaders []string
 
 		// MaxAge indicates how long (in seconds) the results of a preflight request
 		// can be cached.
-		// Optional with default value as 0.
+		// Optional, with default value as 0.
 		MaxAge int
 	}
 )
@@ -75,7 +75,7 @@ func CORSWithConfig(config CORSConfig) lessgo.MiddlewareFunc {
 
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
-			rq := c.Request()
+			req := c.Request()
 			origin := c.Request().Header().Get(lessgo.HeaderOrigin)
 			header := c.Response().Header()
 
@@ -89,7 +89,7 @@ func CORSWithConfig(config CORSConfig) lessgo.MiddlewareFunc {
 			}
 
 			// Simple request
-			if rq.Method() != lessgo.OPTIONS {
+			if req.Method() != lessgo.OPTIONS {
 				header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
 				if origin == "" || allowedOrigin == "" {
 					return next(c)
@@ -119,7 +119,7 @@ func CORSWithConfig(config CORSConfig) lessgo.MiddlewareFunc {
 			if allowHeaders != "" {
 				header.Set(lessgo.HeaderAccessControlAllowHeaders, allowHeaders)
 			} else {
-				h := rq.Header().Get(lessgo.HeaderAccessControlRequestHeaders)
+				h := req.Header().Get(lessgo.HeaderAccessControlRequestHeaders)
 				if h != "" {
 					header.Set(lessgo.HeaderAccessControlAllowHeaders, h)
 				}

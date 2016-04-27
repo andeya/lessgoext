@@ -8,7 +8,7 @@ type (
 	// TrailingSlashConfig defines the config for TrailingSlash middleware.
 	TrailingSlashConfig struct {
 		// RedirectCode is the status code used when redirecting the request.
-		// Optional but when provided the request is redirected using this code.
+		// Optional, but when provided the request is redirected using this code.
 		RedirectCode int
 	}
 )
@@ -26,8 +26,8 @@ func AddTrailingSlash() lessgo.MiddlewareFunc {
 func AddTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
-			rq := c.Request()
-			url := rq.URL()
+			req := c.Request()
+			url := req.URL()
 			path := url.Path()
 			qs := url.QueryString()
 			if path != "/" && path[len(path)-1] != '/' {
@@ -39,7 +39,7 @@ func AddTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.MiddlewareFun
 				if config.RedirectCode != 0 {
 					return c.Redirect(config.RedirectCode, uri)
 				}
-				rq.SetURI(uri)
+				req.SetURI(uri)
 				url.SetPath(path)
 			}
 			return next(c)
@@ -60,8 +60,8 @@ func RemoveTrailingSlash() lessgo.MiddlewareFunc {
 func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
-			rq := c.Request()
-			url := rq.URL()
+			req := c.Request()
+			url := req.URL()
 			path := url.Path()
 			qs := url.QueryString()
 			l := len(path) - 1
@@ -74,7 +74,7 @@ func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.Middleware
 				if config.RedirectCode != 0 {
 					return c.Redirect(config.RedirectCode, uri)
 				}
-				rq.SetURI(uri)
+				req.SetURI(uri)
 				url.SetPath(path)
 			}
 			return next(c)

@@ -18,11 +18,11 @@ type (
 
 		// Index is the list of index files to be searched and used when serving
 		// a directory.
-		// Optional with default value as []string{"index.html"}.
+		// Optional, with default value as []string{"index.html"}.
 		Index []string `json:"index"`
 
 		// Browse is a flag to enable/disable directory browsing.
-		// Optional with default value as false.
+		// Optional, with default value as false.
 		Browse bool `json:"browse"`
 	}
 )
@@ -53,13 +53,11 @@ func StaticWithConfig(config StaticConfig) lessgo.MiddlewareFunc {
 
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
-			if !strings.Contains(c.Path(), "*") {
-				return next(c)
-			}
-			// If serving from a group, e.g. `/static*`.
 			fs := http.Dir(config.Root)
 			p := c.Request().URL().Path()
-			p = c.P(0)
+			if strings.Contains(c.Path(), "*") { // If serving from a group, e.g. `/static*`.
+				p = c.P(0)
+			}
 			file := path.Clean(p)
 			f, err := fs.Open(file)
 			if err != nil {
@@ -82,19 +80,16 @@ func StaticWithConfig(config StaticConfig) lessgo.MiddlewareFunc {
 				// TODO: search all files
 				file = path.Join(file, config.Index[0])
 				f, err = fs.Open(file)
-				if err != nil {
-					return next(c)
-				}
-				if config.Browse {
+				if err != nil && config.Browse {
 					dirs, err := d.Readdir(-1)
 					if err != nil {
 						return err
 					}
 
 					// Create a directory index
-					rs := c.Response()
-					rs.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
-					if _, err = fmt.Fprintf(rs, "<pre>\n"); err != nil {
+					res := c.Response()
+					res.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
+					if _, err = fmt.Fprintf(res, "<pre>\n"); err != nil {
 						return err
 					}
 					for _, d := range dirs {
@@ -104,11 +99,11 @@ func StaticWithConfig(config StaticConfig) lessgo.MiddlewareFunc {
 							color = "#e91e63"
 							name += "/"
 						}
-						if _, err = fmt.Fprintf(rs, "<a href=\"%s\" style=\"color: %s;\">%s</a>\n", name, color, name); err != nil {
+						if _, err = fmt.Fprintf(res, "<a href=\"%s\" style=\"color: %s;\">%s</a>\n", name, color, name); err != nil {
 							return err
 						}
 					}
-					_, err = fmt.Fprintf(rs, "</pre>\n")
+					_, err = fmt.Fprintf(res, "</pre>\n")
 					return err
 				}
 				if fi, err = f.Stat(); err != nil { // Index file
