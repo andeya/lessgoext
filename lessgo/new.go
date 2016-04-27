@@ -275,111 +275,127 @@ func createContent(tpl string) string {
 var MiddlewareTest = `package Middleware
 
 import (
-	"errors"
+    "errors"
 
-	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgo/logs"
+    "github.com/lessgo/lessgo"
+    "github.com/lessgo/lessgo/logs"
 )
 
 func init() {
-	lessgo.RegMiddleware("打印一些东西", "描述可以省略", func(ctx lessgo.Context) error {
-		ctx.Logger().Info("测试中间件-打印一些东西：1234567890")
-		return nil
-	})
-	lessgo.RegMiddleware("显示Header", "描述可以省略", func(ctx lessgo.Context) error {
-		logs.Info("测试中间件-显示Header：%v", ctx.Request().Header().Keys())
-		return nil
-	})
-	lessgo.RegMiddleware("故意报错", "描述可以省略", func(ctx lessgo.Context) error {
-		logs.Info("测试中间件-故意报错")
-		return errors.New("中间件故意报错 error")
-	})
+    lessgo.RegMiddleware("打印一些东西", "描述可以省略", func(ctx lessgo.Context) error {
+        ctx.Logger().Info("测试中间件-打印一些东西：1234567890")
+        return nil
+    })
+    lessgo.RegMiddleware("显示Header", "描述可以省略", func(ctx lessgo.Context) error {
+        logs.Info("测试中间件-显示Header：%v", ctx.Request().Header().Keys())
+        return nil
+    })
+    lessgo.RegMiddleware("故意报错", "描述可以省略", func(ctx lessgo.Context) error {
+        logs.Info("测试中间件-故意报错")
+        return errors.New("中间件故意报错 error")
+    })
 }
 `
 var SysRouter = `package SystemAPI
 
 import (
-	"github.com/lessgo/lessgo"
+    "github.com/lessgo/lessgo"
 
-	"[[[importPrefix]]]/SystemAPI/Admin"
-	"[[[importPrefix]]]/SystemAPI/Admin/Login"
+    "[[[importPrefix]]]/SystemAPI/Admin"
+    "[[[importPrefix]]]/SystemAPI/Admin/Login"
 )
 
 func init() {
-	lessgo.RootRouter(
-		lessgo.SubRouter("/admin", "后台管理",
-			lessgo.Any("/index", "后台首页", Admin.IndexHandle),
-			lessgo.SubRouter("/login", "后台登陆",
-				lessgo.Get(":user/:password", "后台登陆", Login.IndexHandle),
-				lessgo.Post(":user/:password", "后台登陆", Login.IndexHandle),
-			),
-		),
-	)
+    lessgo.RootRouter(
+        lessgo.SubRouter("/admin", "后台管理",
+            lessgo.Any("/index", "后台首页", Admin.IndexHandle),
+            lessgo.SubRouter("/login", "后台登陆",
+                lessgo.Get(":user/:password", "后台登陆", Login.IndexHandle),
+                lessgo.Post(":user/:password", "后台登陆", Login.IndexHandle),
+            ),
+        ),
+    )
 }
 `
 
 var AdminIndexHandle = `package Admin
 
 import (
-	"time"
+    "time"
 
-	"github.com/lessgo/lessgo"
+    "github.com/lessgo/lessgo"
 )
 
 func IndexHandle(ctx lessgo.Context) error {
-	ctx.Logger().Info("这里是后台首页,等待1s")
-	ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
-	ctx.Logger().Info("获取参数a = %v", ctx.QueryParam("a"))
-	time.Sleep(1e9)
-	return ctx.JSON(200, "这里是后台首页")
+    ctx.Logger().Info("这里是后台首页,等待1s")
+    ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
+    ctx.Logger().Info("获取参数a = %v", ctx.QueryParam("a"))
+    time.Sleep(1e9)
+    return ctx.JSON(200, "这里是后台首页")
 }
 `
 
 var AdminLoginIndexHandle = `package Login
 
 import (
-	. "github.com/lessgo/lessgo"
+    . "github.com/lessgo/lessgo"
 )
 
 var IndexHandle = DescHandler{
-	Desc:     "后台管理登录操作",
-	Produces: []string{"application/html"},
-	Params: []Param{
-		{
-			Name:     "user",
-			In:       "path",
-			Required: true,
-			Format:   "",
-			Desc:     "用户名",
-		},
-		{
-			Name:     "password",
-			In:       "path",
-			Required: true,
-			Format:   "",
-			Desc:     "密码",
-		},
-	},
-	Handler: func(ctx Context) error {
-		return ctx.Render(200,
-			"SystemView/Admin/Login/index.tpl",
-			map[string]interface{}{
-				"name":       ctx.Param("user"),
-				"password":   ctx.Param("password"),
-				"repeatfunc": repeatfunc,
-			})
-	},
+    Desc:     "后台管理登录操作",
+    Produces: []string{"application/html"},
+    Params: []Param{
+        {
+            Name:     "user",
+            In:       "path",
+            Required: true,
+            Format:   "henry",
+            Desc:     "用户名",
+        },
+        {
+            Name:     "password",
+            In:       "path",
+            Required: true,
+            Format:   "12345678",
+            Desc:     "密码",
+        },
+    },
+    Handler: func(ctx Context) error {
+        sess, err := ctx.SessionStart()
+        if err != nil {
+            ctx.Logger().Error("%v", err)
+        } else {
+            err = sess.Set("user", ctx.Param("user"))
+            if err != nil {
+                ctx.Logger().Error("Set session [user] failed: %v", err)
+            }
+            err = sess.Set("password", ctx.Param("password"))
+            if err != nil {
+                ctx.Logger().Error("Set session [user] failed: %v", err)
+            }
+            ctx.Logger().Info("session user: %v", sess.Get("user"))
+            ctx.Logger().Info("session password: %v", sess.Get("password"))
+        }
+
+        return ctx.Render(200,
+            "SystemView/Admin/Login/index.tpl",
+            map[string]interface{}{
+                "name":       ctx.Param("user"),
+                "password":   ctx.Param("password"),
+                "repeatfunc": repeatfunc,
+            })
+    },
 }
 `
 
 var AdminLoginIndexModel = `package Login
 
 import (
-	"strings"
+    "strings"
 )
 
 func repeatfunc(s string, count int) string {
-	return strings.Repeat(s, count)
+    return strings.Repeat(s, count)
 }
 `
 
@@ -400,54 +416,54 @@ var AdminLoginIndexTpl = `<!DOCTYPE html>
 var BusRouter = `package BusinessAPI
 
 import (
-	"github.com/lessgo/lessgo"
+    "github.com/lessgo/lessgo"
 
-	"[[[importPrefix]]]/BusinessAPI/Home"
+    "[[[importPrefix]]]/BusinessAPI/Home"
 )
 
 func init() {
-	lessgo.RootRouter(
-		lessgo.SubRouter("/home", "前台",
-			lessgo.Get("index", "首页", Home.IndexHandle, "显示Header"),
-		).Use("打印一些东西"),
-	)
+    lessgo.RootRouter(
+        lessgo.SubRouter("/home", "前台",
+            lessgo.Get("index", "首页", Home.IndexHandle, "显示Header"),
+        ).Use("打印一些东西"),
+    )
 }
 `
 var HomeIndexHandle = `package Home
 
 import (
-	"github.com/lessgo/lessgo"
+    "github.com/lessgo/lessgo"
 )
 
 func IndexHandle(ctx lessgo.Context) error {
-	return ctx.Render(
-		200,
-		"BusinessView/Home/index.tpl",
-		map[string]interface{}{
-			"title":   lessgo.NAME,
-			"version": lessgo.VERSION,
-			"content": "Welcome To Lessgo",
-		})
+    return ctx.Render(
+        200,
+        "BusinessView/Home/index.tpl",
+        map[string]interface{}{
+            "title":   lessgo.NAME,
+            "version": lessgo.VERSION,
+            "content": "Welcome To Lessgo",
+        })
 }
 `
 
 var Maingo = `package main
 
 import (
-	"github.com/lessgo/lessgo"
-	. "github.com/lessgo/lessgo/engine/standard"
-	// . "github.com/lessgo/lessgo/engine/fasthttp"
-	"github.com/lessgo/lessgoext/swagger"
+    "github.com/lessgo/lessgo"
+    . "github.com/lessgo/lessgo/engine/standard"
+    // . "github.com/lessgo/lessgo/engine/fasthttp"
+    "github.com/lessgo/lessgoext/swagger"
 
-	_ "[[[importPrefix]]]/BusinessAPI"
-	_ "[[[importPrefix]]]/Common/Middleware"
-	_ "[[[importPrefix]]]/SystemAPI"
+    _ "[[[importPrefix]]]/BusinessAPI"
+    _ "[[[importPrefix]]]/Common/Middleware"
+    _ "[[[importPrefix]]]/SystemAPI"
 )
 
 func main() {
-	swagger.Init()
-	lessgo.SetHome("/home")
-	lessgo.Run(WithConfig)
+    swagger.Init()
+    lessgo.SetHome("/home")
+    lessgo.Run(WithConfig)
 }
 `
 
@@ -595,15 +611,15 @@ $(function() {
                 }
 
                 var $widget = $(' \
-					<div class="github-box repo">  \
-					    <div class="github-box-title"> \
-					        <div class="github-stats"> \
-					        Star<a class="watchers" title="Star" href="' + repo.url.replace('api.', '').replace('repos/', '') + '/stargazers" target="_blank">' + repo.stargazers_count + '</a> \
-					        Fork<a class="forks" title="Forks" href="' + repo.url.replace('api.', '').replace('repos/', '') + '/network" target="_blank">' + repo.forks + '</a> \
-					        </div> \
-					    </div> \
-					</div> \
-				');
+                    <div class="github-box repo">  \
+                        <div class="github-box-title"> \
+                            <div class="github-stats"> \
+                            Star<a class="watchers" title="Star" href="' + repo.url.replace('api.', '').replace('repos/', '') + '/stargazers" target="_blank">' + repo.stargazers_count + '</a> \
+                            Fork<a class="forks" title="Forks" href="' + repo.url.replace('api.', '').replace('repos/', '') + '/network" target="_blank">' + repo.forks + '</a> \
+                            </div> \
+                        </div> \
+                    </div> \
+                ');
 
                 $widget.appendTo($container);
             }
