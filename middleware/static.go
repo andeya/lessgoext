@@ -31,7 +31,7 @@ var (
 	// DefaultStaticConfig is the default static middleware config.
 	DefaultStaticConfig = StaticConfig{
 		Index:  []string{"index.html"},
-		Browse: false,
+		Browse: true,
 	}
 )
 
@@ -80,32 +80,35 @@ func StaticWithConfig(config StaticConfig) lessgo.MiddlewareFunc {
 				// TODO: search all files
 				file = path.Join(file, config.Index[0])
 				f, err = fs.Open(file)
-				if err != nil && config.Browse {
-					dirs, err := d.Readdir(-1)
-					if err != nil {
-						return err
-					}
-
-					// Create a directory index
-					res := c.Response()
-					res.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
-					if _, err = fmt.Fprintf(res, "<pre>\n"); err != nil {
-						return err
-					}
-					for _, d := range dirs {
-						name := d.Name()
-						color := "#212121"
-						if d.IsDir() {
-							color = "#e91e63"
-							name += "/"
-						}
-						if _, err = fmt.Fprintf(res, "<a href=\"%s\" style=\"color: %s;\">%s</a>\n", name, color, name); err != nil {
+				if err != nil {
+					if config.Browse {
+						dirs, err := d.Readdir(-1)
+						if err != nil {
 							return err
 						}
+						// Create a directory index
+						res := c.Response()
+						res.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
+
+						var list string
+						prefix := c.Request().URL().Path()
+						for _, d := range dirs {
+							name := d.Name()
+							color := "#212121"
+							if d.IsDir() {
+								color = "#e91e63"
+								name += "/"
+							}
+							list += fmt.Sprintf("<p><a href=\"%s\" style=\"color: %s;\">%s</a></p>\n", path.Join(prefix, name), color, name)
+						}
+						_, err = res.Write([]byte(list))
+						if err == nil {
+							return nil
+						}
 					}
-					_, err = fmt.Fprintf(res, "</pre>\n")
 					return err
 				}
+				defer f.Close()
 				if fi, err = f.Stat(); err != nil { // Index file
 					return err
 				}
