@@ -107,8 +107,9 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			Summary:     vr.Description(),
 			Description: vr.Description(),
 			OperationId: vr.Id,
-			Consumes:    vr.Produces(),
-			Produces:    vr.Produces(),
+			// Consumes:    vr.Produces(),
+			// Produces:    vr.Produces(),
+
 			// Parameters:  []*Parameter{},
 			Responses: map[string]*Resp{
 				"200": {Description: "Successful operation"},
