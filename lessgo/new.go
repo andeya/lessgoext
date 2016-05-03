@@ -454,7 +454,7 @@ import (
 func init() {
     lessgo.Root(
         lessgo.Branch("/home", "前台",
-            lessgo.Leaf("index", Home.IndexHandle, Middleware.ShowHeaderWare),
+            lessgo.Leaf("/index", Home.IndexHandle, Middleware.ShowHeaderWare),
         ).Use(Middleware.PrintWare),
     )
 }
