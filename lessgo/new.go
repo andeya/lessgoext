@@ -281,20 +281,41 @@ import (
     "github.com/lessgo/lessgo/logs"
 )
 
-func init() {
-    lessgo.RegMiddleware("打印一些东西", "描述可以省略", func(ctx lessgo.Context) error {
-        ctx.Logger().Info("测试中间件-打印一些东西：1234567890")
-        return nil
-    })
-    lessgo.RegMiddleware("显示Header", "描述可以省略", func(ctx lessgo.Context) error {
-        logs.Info("测试中间件-显示Header：%v", ctx.Request().Header().Keys())
-        return nil
-    })
-    lessgo.RegMiddleware("故意报错", "描述可以省略", func(ctx lessgo.Context) error {
-        logs.Info("测试中间件-故意报错")
-        return errors.New("中间件故意报错 error")
-    })
-}
+var PrintWare = (&lessgo.ApiMiddleware{
+    Name:          "打印测试",
+    Desc:          "打印测试",
+    DefaultConfig: nil,
+    Middleware: func(config string) lessgo.MiddlewareFunc {
+        return lessgo.WrapMiddleware(func(ctx lessgo.Context) error {
+            ctx.Logger().Info("测试中间件-打印一些东西：1234567890")
+            return nil
+        })
+    },
+}).Init()
+
+var ShowHeaderWare = (&lessgo.ApiMiddleware{
+    Name:          "显示Header",
+    Desc:          "显示Header测试",
+    DefaultConfig: nil,
+    Middleware: func(config string) lessgo.MiddlewareFunc {
+        return lessgo.WrapMiddleware(func(ctx lessgo.Context) error {
+            logs.Info("测试中间件-显示Header：%v", ctx.Request().Header().Keys())
+            return nil
+        })
+    },
+}).Init()
+
+var ErrorTestWare = (&lessgo.ApiMiddleware{
+    Name:          "故意报错",
+    Desc:          "故意报错测试",
+    DefaultConfig: nil,
+    Middleware: func(config string) lessgo.MiddlewareFunc {
+        return lessgo.WrapMiddleware(func(ctx lessgo.Context) error {
+            ctx.Logger().Info("测试中间件-打印一些东西：1234567890")
+            return errors.New("中间件故意报错 error")
+        })
+    },
+}).Init()
 `
 var SysRouter = `package SystemAPI
 
@@ -306,12 +327,11 @@ import (
 )
 
 func init() {
-    lessgo.RootRouter(
-        lessgo.SubRouter("/admin", "后台管理",
-            lessgo.Any("/index", "后台首页", Admin.IndexHandle),
-            lessgo.SubRouter("/login", "后台登陆",
-                lessgo.Get(":user/:password", "后台登陆", Login.IndexHandle),
-                lessgo.Post(":user/:password", "后台登陆", Login.IndexHandle),
+    lessgo.Root(
+        lessgo.Branch("/admin", "后台管理",
+            lessgo.Leaf("/index", Admin.IndexHandle),
+            lessgo.Branch("/login", "后台登陆",
+                lessgo.Leaf("/", Login.IndexHandle),
             ),
         ),
     )
@@ -326,13 +346,17 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-func IndexHandle(ctx lessgo.Context) error {
-    ctx.Logger().Info("这里是后台首页,等待1s")
-    ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
-    ctx.Logger().Info("获取参数a = %v", ctx.QueryParam("a"))
-    time.Sleep(1e9)
-    return ctx.JSON(200, "这里是后台首页")
-}
+var IndexHandle = (&lessgo.ApiHandler{
+    Desc:    "后台首页",
+    Methods: []string{},
+    Handler: func(ctx lessgo.Context) error {
+        ctx.Logger().Info("这里是后台首页,等待1s")
+        ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
+        ctx.Logger().Info("获取参数a = %v", ctx.QueryParam("a"))
+        time.Sleep(1e9)
+        return ctx.JSON(200, "这里是后台首页")
+    },
+}).Init()
 `
 
 var AdminLoginIndexHandle = `package Login
@@ -341,8 +365,9 @@ import (
     . "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = DescHandler{
+var IndexHandle = (&ApiHandler{
     Desc:     "后台管理登录操作",
+    Methods:  []string{"GET", "POST"},
     Produces: []string{"application/html"},
     Params: []Param{
         {
@@ -389,7 +414,7 @@ var IndexHandle = DescHandler{
                 "repeatfunc": repeatfunc,
             })
     },
-}
+}).Init()
 `
 
 var AdminLoginIndexModel = `package Login
@@ -423,15 +448,17 @@ import (
     "github.com/lessgo/lessgo"
 
     "[[[importPrefix]]]/BusinessAPI/Home"
+    "[[[importPrefix]]]/Common/Middleware"
 )
 
 func init() {
-    lessgo.RootRouter(
-        lessgo.SubRouter("/home", "前台",
-            lessgo.Get("index", "首页", Home.IndexHandle, "显示Header"),
-        ).Use("打印一些东西"),
+    lessgo.Root(
+        lessgo.Branch("/home", "前台",
+            lessgo.Leaf("index", Home.IndexHandle, Middleware.ShowHeaderWare),
+        ).Use(Middleware.PrintWare),
     )
 }
+
 `
 var HomeIndexHandle = `package Home
 
@@ -439,24 +466,28 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-func IndexHandle(ctx lessgo.Context) error {
-    return ctx.Render(
-        200,
-        "BusinessView/Home/index.tpl",
-        map[string]interface{}{
-            "title":   lessgo.NAME,
-            "version": lessgo.VERSION,
-            "content": "Welcome To Lessgo",
-        })
-}
+var IndexHandle = (&lessgo.ApiHandler{
+    Desc:    "首页",
+    Methods: []string{"GET"},
+    Handler: func(ctx lessgo.Context) error {
+        return ctx.Render(
+            200,
+            "BusinessView/Home/index.tpl",
+            map[string]interface{}{
+                "title":   lessgo.NAME,
+                "version": lessgo.VERSION,
+                "content": "Welcome To Lessgo",
+            })
+    },
+}).Init()
 `
 
 var Maingo = `package main
 
 import (
     "github.com/lessgo/lessgo"
-    . "github.com/lessgo/lessgo/engine/standard"
-    // . "github.com/lessgo/lessgo/engine/fasthttp"
+    // . "github.com/lessgo/lessgo/engine/standard"
+    . "github.com/lessgo/lessgo/engine/fasthttp"
     "github.com/lessgo/lessgoext/swagger"
 
     _ "[[[importPrefix]]]/BusinessAPI"

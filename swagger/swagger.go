@@ -24,25 +24,35 @@ var (
 			return "http"
 		}
 	}()
-	jsonUrl = scheme + "://" + path.Join(lessgo.Lessgo().AppConfig.Info.Host, "swagger.json")
+	jsonUrl       = scheme + "://" + path.Join(lessgo.Lessgo().AppConfig.Info.Host, "swagger.json")
+	swaggerHandle = &lessgo.ApiHandler{
+		Desc:    "swagger",
+		Methods: []string{"GET"},
+		Handler: func(c lessgo.Context) error {
+			// 返回api配置
+			return c.JSON(200, apidoc)
+		},
+	}
 )
 
 func Init() {
 	if !lessgo.AppConfig.CrossDomain {
 		lessgo.Logger().Warn("If you want to use swagger, please set crossdomain to true.")
 	}
-	lessgo.RootRouter(lessgo.Get(
-		"/swagger.json", "swagger", func(c lessgo.Context) error {
-			// 返回api配置
-			return c.JSON(200, apidoc)
-		},
-	))
+	lessgo.Root(
+		lessgo.Leaf(
+			"/swagger.json", swaggerHandle,
+		),
+	)
 
 	if !utils.FileExists("Swagger") {
 		// 拷贝swagger文件至当前目录下
 		CopySwaggerFiles()
 	}
-
+	rootTag := &Tag{
+		Name:        lessgo.RootRouter().Prefix,
+		Description: lessgo.RootRouter().Description(),
+	}
 	// 生成swagger依赖的json对象
 	apidoc = &Swagger{
 		Version: SwaggerVersion,
@@ -59,86 +69,96 @@ func Init() {
 		},
 		Host:     lessgo.AppConfig.Info.Host,
 		BasePath: "/",
-		Tags: []*Tag{
-			{
-				Name:        "/:",
-				Description: "",
-			},
-		},
-		Schemes: []string{scheme},
-		Paths:   map[string]map[string]*Opera{},
+		Tags:     []*Tag{rootTag},
+		Schemes:  []string{scheme},
+		Paths:    map[string]map[string]*Opera{},
 		// SecurityDefinitions: map[string]map[string]interface{}{},
 		// Definitions:         map[string]Definition{},
 		// ExternalDocs:        map[string]string{},
 	}
-	for _, vr := range lessgo.Lessgo().VirtRouter.Progeny() {
-		if vr.Type != lessgo.HANDLER {
+
+	for _, child := range lessgo.RootRouter().Children() {
+		if child.Type == lessgo.HANDLER {
+			addpath(child, rootTag)
 			continue
 		}
-		operas := map[string]*Opera{}
-		for _, method := range vr.Methods() {
-			if method == lessgo.CONNECT || method == lessgo.TRACE {
+		tag := &Tag{
+			Name:        child.Prefix,
+			Description: child.Description(),
+		}
+		apidoc.Tags = append(apidoc.Tags, tag)
+		for _, vr := range child.Progeny() {
+			if vr.Type != lessgo.HANDLER {
 				continue
 			}
-			o := &Opera{
-				Tags:        []string{"/:"},
-				Summary:     vr.Name,
-				Description: vr.Description(),
-				OperationId: vr.Id,
-				Consumes:    vr.Produces(),
-				Produces:    vr.Produces(),
-				// Parameters:  []*Parameter{},
-				Responses: map[string]*Resp{
-					"200": {Description: "Successful operation"},
-					"400": {Description: "Invalid status value"},
-					"404": {Description: "Not found"},
-				},
-				// Security: []map[string][]string{},
-			}
-			for _, param := range vr.Params() {
-				p := &Parameter{
-					In:          param.In,
-					Name:        param.Name,
-					Description: param.Desc,
-					Required:    param.Required,
-					// Items:       &Items{},
-					// Schema:      &Schema{},
-				}
-				typ := build(param.Format)
-				if typ == "object" {
-					ref := strings.Replace(vr.Path()[1:]+param.Name, "/", "__", -1)
-					p.Schema = &Schema{
-						Ref: "#/definitions/" + ref,
-					}
-					def := &Definition{
-						Type: typ,
-						Xml:  &Xml{Name: ref},
-					}
-					def.Properties = properties(param.Format)
-					if apidoc.Definitions == nil {
-						apidoc.Definitions = map[string]*Definition{}
-					}
-					apidoc.Definitions[ref] = def
-				} else {
-					p.Type = typ
-					p.Format = fmt.Sprintf("%T", param.Format)
-					p.Default = param.Format
-				}
-				o.Parameters = append(o.Parameters, p)
-			}
-			operas[strings.ToLower(method)] = o
-		}
-		pid := createPath(vr)
-		if _operas, ok := apidoc.Paths[pid]; ok {
-			for k, v := range operas {
-				_operas[k] = v
-			}
-		} else {
-			apidoc.Paths[pid] = operas
+			addpath(vr, tag)
 		}
 	}
 }
 
+func addpath(vr *lessgo.VirtRouter, tag *Tag) {
+	operas := map[string]*Opera{}
+	for _, method := range vr.Methods() {
+		if method == lessgo.CONNECT || method == lessgo.TRACE {
+			continue
+		}
+		o := &Opera{
+			Tags:        []string{tag.Name},
+			Summary:     vr.Description(),
+			Description: vr.Description(),
+			OperationId: vr.Id,
+			Consumes:    vr.Produces(),
+			Produces:    vr.Produces(),
+			// Parameters:  []*Parameter{},
+			Responses: map[string]*Resp{
+				"200": {Description: "Successful operation"},
+				"400": {Description: "Invalid status value"},
+				"404": {Description: "Not found"},
+			},
+			// Security: []map[string][]string{},
+		}
+		for _, param := range vr.Params() {
+			p := &Parameter{
+				In:          param.In,
+				Name:        param.Name,
+				Description: param.Desc,
+				Required:    param.Required,
+				// Items:       &Items{},
+				// Schema:      &Schema{},
+			}
+			typ := build(param.Format)
+			if typ == "object" {
+				ref := strings.Replace(vr.Path()[1:]+param.Name, "/", "__", -1)
+				p.Schema = &Schema{
+					Ref: "#/definitions/" + ref,
+				}
+				def := &Definition{
+					Type: typ,
+					Xml:  &Xml{Name: ref},
+				}
+				def.Properties = properties(param.Format)
+				if apidoc.Definitions == nil {
+					apidoc.Definitions = map[string]*Definition{}
+				}
+				apidoc.Definitions[ref] = def
+			} else {
+				p.Type = typ
+				p.Format = fmt.Sprintf("%T", param.Format)
+				p.Default = param.Format
+			}
+			o.Parameters = append(o.Parameters, p)
+		}
+		operas[strings.ToLower(method)] = o
+	}
+	pid := createPath(vr)
+	if _operas, ok := apidoc.Paths[pid]; ok {
+		for k, v := range operas {
+			_operas[k] = v
+		}
+	} else {
+		apidoc.Paths[pid] = operas
+	}
+}
 func properties(obj interface{}) map[string]*Property {
 	v := reflect.ValueOf(obj)
 	if v.Kind() == reflect.Ptr {
