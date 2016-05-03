@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -35,13 +36,9 @@ var (
 
 // Gzip returns a middleware which compresses HTTP response using gzip compression
 // scheme.
-func Gzip() lessgo.MiddlewareFunc {
-	return GzipWithConfig(DefaultGzipConfig)
-}
-
-// GzipWithConfig return gzip middleware from config.
-// See `Gzip()`.
-func GzipWithConfig(config GzipConfig) lessgo.MiddlewareFunc {
+func Gzip(configJSON string) lessgo.MiddlewareFunc {
+	config := GzipConfig{}
+	json.Unmarshal([]byte(configJSON), &config)
 	// Defaults
 	if config.Level == 0 {
 		config.Level = DefaultGzipConfig.Level

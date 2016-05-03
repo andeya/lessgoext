@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,13 +55,10 @@ var (
 
 // CORS returns a Cross-Origin Resource Sharing (CORS) middleware.
 // See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS
-func CORS() lessgo.MiddlewareFunc {
-	return CORSWithConfig(DefaultCORSConfig)
-}
+func CORS(configJSON string) lessgo.MiddlewareFunc {
+	config := CORSConfig{}
+	json.Unmarshal([]byte(configJSON), &config)
 
-// CORSWithConfig returns a CORS middleware from config.
-// See `CORS()`.
-func CORSWithConfig(config CORSConfig) lessgo.MiddlewareFunc {
 	// Defaults
 	if len(config.AllowOrigins) == 0 {
 		config.AllowOrigins = DefaultCORSConfig.AllowOrigins

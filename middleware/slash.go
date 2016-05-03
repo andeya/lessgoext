@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"encoding/json"
+
 	"github.com/lessgo/lessgo"
 )
 
@@ -15,15 +17,9 @@ type (
 
 // AddTrailingSlash returns a root level (before router) middleware which adds a
 // trailing slash to the request `URL#Path`.
-//
-// Usage `Echo#Pre(AddTrailingSlash())`
-func AddTrailingSlash() lessgo.MiddlewareFunc {
-	return AddTrailingSlashWithConfig(TrailingSlashConfig{})
-}
-
-// AddTrailingSlashWithConfig returns a AddTrailingSlash middleware from config.
-// See `AddTrailingSlash()`.
-func AddTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.MiddlewareFunc {
+func AddTrailingSlash(configJSON string) lessgo.MiddlewareFunc {
+	config := TrailingSlashConfig{}
+	json.Unmarshal([]byte(configJSON), &config)
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			req := c.Request()

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"path"
@@ -37,15 +38,10 @@ var (
 
 // Static returns a static middleware to serves static content from the provided
 // root directory.
-func Static(root string) lessgo.MiddlewareFunc {
-	c := DefaultStaticConfig
-	c.Root = root
-	return StaticWithConfig(c)
-}
+func Static(configJSON string) lessgo.MiddlewareFunc {
+	config := StaticConfig{}
+	json.Unmarshal([]byte(configJSON), &config)
 
-// StaticWithConfig returns a static middleware from config.
-// See `Static()`.
-func StaticWithConfig(config StaticConfig) lessgo.MiddlewareFunc {
 	// Defaults
 	if config.Index == nil {
 		config.Index = DefaultStaticConfig.Index

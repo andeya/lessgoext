@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -66,20 +67,11 @@ var (
 	}
 )
 
-// BasicAuth returns an HTTP basic auth middleware.
-//
-// For valid credentials it calls the next handler.
-// For invalid credentials, it sends "401 - Unauthorized" response.
-// For empty or invalid `Authorization` header, it sends "400 - Bad Request" response.
-func BasicAuth(fn BasicAuthFunc) lessgo.MiddlewareFunc {
-	c := DefaultBasicAuthConfig
-	c.AuthFunc = fn
-	return BasicAuthWithConfig(c)
-}
-
-// BasicAuthWithConfig returns an HTTP basic auth middleware from config.
+// BasicAuth returns an HTTP basic auth middleware from config.
 // See `BasicAuth()`.
-func BasicAuthWithConfig(config BasicAuthConfig) lessgo.MiddlewareFunc {
+func BasicAuth(configJSON string) lessgo.MiddlewareFunc {
+	config := BasicAuthConfig{}
+	json.Unmarshal([]byte(configJSON), &config)
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			auth := c.Request().Header().Get(lessgo.HeaderAuthorization)
@@ -114,15 +106,9 @@ func BasicAuthWithConfig(config BasicAuthConfig) lessgo.MiddlewareFunc {
 // For empty or invalid `Authorization` header, it sends "400 - Bad Request".
 //
 // See https://jwt.io/introduction
-func JWTAuth(key []byte) lessgo.MiddlewareFunc {
-	c := DefaultJWTAuthConfig
-	c.SigningKey = key
-	return JWTAuthWithConfig(c)
-}
-
-// JWTAuthWithConfig returns a JWT auth middleware from config.
-// See `JWTAuth()`.
-func JWTAuthWithConfig(config JWTAuthConfig) lessgo.MiddlewareFunc {
+func JWTAuth(configJSON string) lessgo.MiddlewareFunc {
+	config := JWTAuthConfig{}
+	json.Unmarshal([]byte(configJSON), &config)
 	// Defaults
 	if config.SigningKey == nil {
 		panic("jwt middleware requires signing key")
