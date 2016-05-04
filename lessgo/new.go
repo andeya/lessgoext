@@ -281,7 +281,7 @@ import (
     "github.com/lessgo/lessgo/logs"
 )
 
-var PrintWare = (&lessgo.ApiMiddleware{
+var PrintWare = lessgo.ApiMiddleware{
     Name:          "打印测试",
     Desc:          "打印测试",
     DefaultConfig: nil,
@@ -291,9 +291,9 @@ var PrintWare = (&lessgo.ApiMiddleware{
             return nil
         })
     },
-}).Init()
+}.Reg()
 
-var ShowHeaderWare = (&lessgo.ApiMiddleware{
+var ShowHeaderWare = lessgo.RegMiddleware(lessgo.ApiMiddleware{
     Name:          "显示Header",
     Desc:          "显示Header测试",
     DefaultConfig: nil,
@@ -303,9 +303,9 @@ var ShowHeaderWare = (&lessgo.ApiMiddleware{
             return nil
         })
     },
-}).Init()
+})
 
-var ErrorTestWare = (&lessgo.ApiMiddleware{
+var ErrorTestWare = lessgo.ApiMiddleware{
     Name:          "故意报错",
     Desc:          "故意报错测试",
     DefaultConfig: nil,
@@ -315,7 +315,7 @@ var ErrorTestWare = (&lessgo.ApiMiddleware{
             return errors.New("中间件故意报错 error")
         })
     },
-}).Init()
+}.Reg()
 `
 var SysRouter = `package SystemAPI
 
@@ -346,7 +346,7 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = (&lessgo.ApiHandler{
+var IndexHandle = lessgo.RegHandler(lessgo.ApiHandler{
     Desc:    "后台首页",
     Methods: []string{},
     Handler: func(ctx lessgo.Context) error {
@@ -356,7 +356,7 @@ var IndexHandle = (&lessgo.ApiHandler{
         time.Sleep(1e9)
         return ctx.JSON(200, "这里是后台首页")
     },
-}).Init()
+})
 `
 
 var AdminLoginIndexHandle = `package Login
@@ -365,9 +365,9 @@ import (
     . "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = (&ApiHandler{
-    Desc:     "后台管理登录操作",
-    Methods:  []string{"GET", "POST"},
+var IndexHandle = ApiHandler{
+    Desc:    "后台管理登录操作",
+    Methods: []string{"GET", "OPTIONS"},
     Params: []Param{
         {
             Name:     "user",
@@ -413,7 +413,7 @@ var IndexHandle = (&ApiHandler{
                 "repeatfunc": repeatfunc,
             })
     },
-}).Init()
+}.Reg()
 `
 
 var AdminLoginIndexModel = `package Login
@@ -465,7 +465,7 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = (&lessgo.ApiHandler{
+var IndexHandle = lessgo.ApiHandler{
     Desc:    "首页",
     Methods: []string{"GET"},
     Handler: func(ctx lessgo.Context) error {
@@ -478,7 +478,7 @@ var IndexHandle = (&lessgo.ApiHandler{
                 "content": "Welcome To Lessgo",
             })
     },
-}).Init()
+}.Reg()
 `
 
 var Maingo = `package main
