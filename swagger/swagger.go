@@ -56,6 +56,8 @@ func Init() {
 		lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
 	)
 
+	lessgo.Logger().Sys(`Swagger API doc has been enabled, please access "/apidoc/index.html".` + "\n")
+
 	if !utils.FileExists("Swagger") {
 		// 拷贝swagger文件至当前目录下
 		CopySwaggerFiles()
