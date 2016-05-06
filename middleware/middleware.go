@@ -72,4 +72,11 @@ Limit can be specified as '4x' or '4xB', where x is one of the multiple from K, 
 		DefaultConfig: nil,
 		Middleware:    BodyLimit,
 	}.Reg()
+
+	OnlyLANAccessWare = lessgo.ApiMiddleware{
+		Name:          "OnlyLANAccess",
+		Desc:          `Only allow LAN access.`,
+		DefaultConfig: nil,
+		Middleware:    OnlyLANAccess,
+	}.Reg()
 )

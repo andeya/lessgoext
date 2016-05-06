@@ -13,7 +13,13 @@ import (
 
 	"github.com/lessgo/lessgo"
 	"github.com/lessgo/lessgo/utils"
+	"github.com/lessgo/lessgoext/middleware"
 )
+
+/*
+ * API自动化文档
+ * 仅限局域网访问
+ */
 
 var (
 	apidoc *Swagger
@@ -29,20 +35,25 @@ var (
 		Desc:    "swagger",
 		Methods: []string{"GET"},
 		Handler: func(c lessgo.Context) error {
-			// 返回api配置
 			return c.JSON(200, apidoc)
+		},
+	}
+	apidocHandle = &lessgo.ApiHandler{
+		Desc:    "apidoc",
+		Methods: []string{"GET"},
+		Handler: func(c lessgo.Context) error {
+			return c.File(path.Join("Swagger", c.P(0)))
 		},
 	}
 )
 
 func Init() {
-	if !lessgo.AppConfig.CrossDomain {
-		lessgo.Logger().Warn("If you want to use swagger, please set crossdomain to true.")
-	}
+	// if !lessgo.AppConfig.CrossDomain {
+	// 	lessgo.Logger().Warn("If you want to use swagger, please set crossdomain to true.")
+	// }
 	lessgo.Root(
-		lessgo.Leaf(
-			"/swagger.json", swaggerHandle,
-		),
+		lessgo.Leaf("/swagger.json", swaggerHandle, middleware.OnlyLANAccessWare),
+		lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
 	)
 
 	if !utils.FileExists("Swagger") {
