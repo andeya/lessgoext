@@ -30,7 +30,7 @@ var (
 			return "http"
 		}
 	}()
-	jsonUrl       = scheme + "://" + path.Join(lessgo.Lessgo().AppConfig.Info.Host, "swagger.json")
+	jsonUrl       = "/swagger.json"
 	swaggerHandle = &lessgo.ApiHandler{
 		Desc:    "swagger",
 		Methods: []string{"GET"},
@@ -52,7 +52,7 @@ func Init() {
 	// 	lessgo.Logger().Warn("If you want to use swagger, please set crossdomain to true.")
 	// }
 	lessgo.Root(
-		lessgo.Leaf("/swagger.json", swaggerHandle, middleware.OnlyLANAccessWare),
+		lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccessWare),
 		lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
 	)
 
@@ -80,7 +80,7 @@ func Init() {
 				Url:  lessgo.AppConfig.Info.LicenseUrl,
 			},
 		},
-		Host:     lessgo.AppConfig.Info.Host,
+		// Host:     lessgo.AppConfig.Info.Host,
 		BasePath: "/",
 		Tags:     []*Tag{rootTag},
 		Schemes:  []string{scheme},
