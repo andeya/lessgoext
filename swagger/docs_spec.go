@@ -48,7 +48,7 @@ type (
 		Security    []map[string][]string `json:"security,omitempty"`
 	}
 	Parameter struct {
-		In               string      `json:"in"`
+		In               string      `json:"in"` // "path" | "query" | "formData" | "body" | "header"
 		Name             string      `json:"name"`
 		Description      string      `json:"description"`
 		Required         bool        `json:"required"`
@@ -92,3 +92,14 @@ type (
 		Wrapped bool   `json:"wrapped,omitempty"`
 	}
 )
+
+// 注：在参数已设置完成后再调用
+func (o *Opera) SetConsumes() {
+	o.Consumes = []string{"applicaion/x-www-form-urlencoded"}
+	for _, param := range o.Parameters {
+		if param.Type == "file" {
+			o.Consumes = []string{"multipart/form-data"}
+			return
+		}
+	}
+}

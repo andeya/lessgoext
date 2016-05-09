@@ -123,8 +123,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			Summary:     vr.Description(),
 			Description: vr.Description(),
 			OperationId: vr.Id,
-			// Consumes:    vr.Produces(),
-			// Produces:    vr.Produces(),
+			Produces:    []string{"application/xml", "application/json"},
 
 			// Parameters:  []*Parameter{},
 			Responses: map[string]*Resp{
@@ -165,6 +164,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			}
 			o.Parameters = append(o.Parameters, p)
 		}
+		o.SetConsumes()
 		operas[strings.ToLower(method)] = o
 	}
 	pid := createPath(vr)
