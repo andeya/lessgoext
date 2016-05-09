@@ -103,11 +103,22 @@ func Init() {
 			Description: child.Description(),
 		}
 		apidoc.Tags = append(apidoc.Tags, tag)
-		for _, vr := range child.Progeny() {
-			if vr.Type != lessgo.HANDLER {
+		for _, grandson := range child.Children() {
+			if grandson.Type == lessgo.HANDLER {
+				addpath(grandson, rootTag)
 				continue
 			}
-			addpath(vr, tag)
+			tag := &Tag{
+				Name:        child.Prefix + grandson.Prefix,
+				Description: grandson.Description(),
+			}
+			apidoc.Tags = append(apidoc.Tags, tag)
+			for _, vr := range grandson.Progeny() {
+				if vr.Type != lessgo.HANDLER {
+					continue
+				}
+				addpath(vr, tag)
+			}
 		}
 	}
 }
