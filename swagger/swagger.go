@@ -114,6 +114,8 @@ func Init() {
 
 func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 	operas := map[string]*Opera{}
+	pid := createPath(vr)
+
 	for _, method := range vr.Methods() {
 		if method == lessgo.CONNECT || method == lessgo.TRACE {
 			continue
@@ -124,7 +126,6 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			Description: vr.Description(),
 			OperationId: vr.Id,
 			Produces:    []string{"application/xml", "application/json"},
-
 			// Parameters:  []*Parameter{},
 			Responses: map[string]*Resp{
 				"200": {Description: "Successful operation"},
@@ -133,6 +134,8 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			},
 			// Security: []map[string][]string{},
 		}
+
+		// 固定参数路由
 		for _, param := range vr.Params() {
 			p := &Parameter{
 				In:          param.In,
@@ -164,10 +167,23 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			}
 			o.Parameters = append(o.Parameters, p)
 		}
+
+		// 静态目录路由
+		if strings.HasSuffix(pid, "/{}") {
+			p := &Parameter{
+				In:          "path",
+				Name:        "*",
+				Type:        build("*"),
+				Description: "anypath",
+				Required:    false,
+				Format:      fmt.Sprintf("%T", "*"),
+			}
+			o.Parameters = append(o.Parameters, p)
+		}
+
 		o.SetConsumes()
 		operas[strings.ToLower(method)] = o
 	}
-	pid := createPath(vr)
 	if _operas, ok := apidoc.Paths[pid]; ok {
 		for k, v := range operas {
 			_operas[k] = v
@@ -212,7 +228,8 @@ func properties(obj interface{}) map[string]*Property {
 }
 
 func createPath(vr *lessgo.VirtRouter) string {
-	s := strings.Split(vr.Path(), "/:")
+	u := strings.Replace(vr.Path(), "*", "/{}", -1)
+	s := strings.Split(u, "/:")
 	p := s[0]
 	if len(s) == 1 {
 		return p
