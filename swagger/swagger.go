@@ -42,6 +42,9 @@ var (
 		Desc:    "apidoc",
 		Methods: []string{"GET"},
 		Handler: func(c lessgo.Context) error {
+			if c.Request().URL().Path() == "/apidoc" {
+				return c.Redirect(302, "/apidoc/index.html")
+			}
 			return c.File(path.Join("Swagger", c.P(0)))
 		},
 	}
