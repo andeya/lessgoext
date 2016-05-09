@@ -23,6 +23,7 @@ import (
 
 var (
 	apidoc *Swagger
+	once   = true
 	scheme = func() string {
 		if lessgo.AppConfig.Listen.EnableHTTPS {
 			return "https"
@@ -35,6 +36,10 @@ var (
 		Desc:    "swagger",
 		Methods: []string{"GET"},
 		Handler: func(c lessgo.Context) error {
+			if once {
+				apidoc.Host = c.Request().Host()
+				once = false
+			}
 			return c.JSON(200, apidoc)
 		},
 	}
@@ -48,12 +53,21 @@ var (
 			return c.File(path.Join("Swagger", c.P(0)))
 		},
 	}
+
+	// 静态目录路由参数
+	staticParam = &Parameter{
+		In:          "path",
+		Name:        "static",
+		Type:        build("*"),
+		Description: "any static path or file",
+		Required:    true,
+		Format:      fmt.Sprintf("%T", "*"),
+		Default:     "",
+	}
 )
 
 func Init() {
-	// if !lessgo.AppConfig.CrossDomain {
-	// 	lessgo.Logger().Warn("If you want to use swagger, please set crossdomain to true.")
-	// }
+	// 注册路由
 	lessgo.Root(
 		lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccessWare),
 		lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
@@ -61,10 +75,12 @@ func Init() {
 
 	lessgo.Logger().Sys(`Swagger API doc has been enabled, please access "/apidoc/index.html".` + "\n")
 
+	// 拷贝swagger文件至当前目录下
 	if !utils.FileExists("Swagger") {
-		// 拷贝swagger文件至当前目录下
 		CopySwaggerFiles()
 	}
+
+	// 构建Swagger对象
 	rootTag := &Tag{
 		Name:        lessgo.RootRouter().Prefix,
 		Description: lessgo.RootRouter().Description(),
@@ -83,7 +99,6 @@ func Init() {
 				Url:  lessgo.AppConfig.Info.LicenseUrl,
 			},
 		},
-		// Host:     lessgo.AppConfig.Info.Host,
 		BasePath: "/",
 		Tags:     []*Tag{rootTag},
 		Schemes:  []string{scheme},
@@ -137,7 +152,6 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			Description: vr.Description(),
 			OperationId: vr.Id,
 			Produces:    []string{"application/xml", "application/json"},
-			// Parameters:  []*Parameter{},
 			Responses: map[string]*Resp{
 				"200": {Description: "Successful operation"},
 				"400": {Description: "Invalid status value"},
@@ -180,16 +194,8 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		}
 
 		// 静态目录路由
-		if strings.HasSuffix(pid, "/{}") {
-			p := &Parameter{
-				In:          "path",
-				Name:        "*",
-				Type:        build("*"),
-				Description: "anypath",
-				Required:    false,
-				Format:      fmt.Sprintf("%T", "*"),
-			}
-			o.Parameters = append(o.Parameters, p)
+		if strings.HasSuffix(pid, "/{static}") {
+			o.Parameters = append(o.Parameters, staticParam)
 		}
 
 		o.SetConsumes()
@@ -203,6 +209,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		apidoc.Paths[pid] = operas
 	}
 }
+
 func properties(obj interface{}) map[string]*Property {
 	v := reflect.ValueOf(obj)
 	if v.Kind() == reflect.Ptr {
@@ -239,7 +246,11 @@ func properties(obj interface{}) map[string]*Property {
 }
 
 func createPath(vr *lessgo.VirtRouter) string {
-	u := strings.Replace(vr.Path(), "*", "/{}", -1)
+	u := vr.Path()
+	if strings.HasSuffix(u, "*") {
+		u = strings.TrimSuffix(u, "*")
+		u = path.Join(u, "{static}")
+	}
 	s := strings.Split(u, "/:")
 	p := s[0]
 	if len(s) == 1 {
