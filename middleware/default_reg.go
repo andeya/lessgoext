@@ -18,23 +18,6 @@ var (
 		Middleware:    Static,
 	}.Reg()
 
-	BasicAuthWare = lessgo.ApiMiddleware{
-		Name:          "BasicAuth",
-		Desc:          "an HTTP basic auth middleware from config.",
-		DefaultConfig: DefaultBasicAuthConfig,
-		Middleware:    BasicAuth,
-	}.Reg()
-
-	JWTAuthWare = lessgo.ApiMiddleware{
-		Name: "JWTAuth",
-		Desc: `a JSON Web Token (JWT) auth middleware.
-For valid token, it sets the user in context and calls next handler.
-For invalid token, it sends "401 - Unauthorized" response.
-For empty or invalid 'Authorization' header, it sends "400 - Bad Request".`,
-		DefaultConfig: DefaultJWTAuthConfig,
-		Middleware:    JWTAuth,
-	}.Reg()
-
 	GzipWare = lessgo.ApiMiddleware{
 		Name:          "Gzip",
 		Desc:          `a middleware which compresses HTTP response using gzip compression scheme.`,
