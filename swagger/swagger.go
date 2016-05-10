@@ -273,7 +273,7 @@ type FileInfo struct {
 
 // 拷贝swagger中所有文件至dstSwagger下
 func CopySwaggerFiles() {
-	fp := filepath.Join(os.Getenv("GOPATH"), `\src\github.com\lessgo\lessgoext\swagger\swagger-ui`)
+	fp := filepath.Join(os.Getenv("GOPATH"), `/src/github.com/lessgo/lessgoext/swagger/swagger-ui`)
 	copyfiles.CopyFiles(fp, dstSwagger, "", copyFunc)
 }
 

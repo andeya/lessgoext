@@ -253,7 +253,7 @@ func createApp(cmd *Command, args []string) int {
 
 func mrkdir(p ...string) {
 	pt := path.Join(p...)
-	os.Mkdir(pt, 0755)
+	os.Mkdir(pt, 0777)
 	fmt.Println(pt + string(path.Separator))
 }
 

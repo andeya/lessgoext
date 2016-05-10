@@ -25,7 +25,7 @@ type FileInfo struct {
 func CopyFiles(srcFolder, dstFolder, suffix string, copyFunc func(srcHandle, dstHandle *os.File) error) {
 	files_ch := make(chan *FileInfo, 100)
 	go walkFiles(srcFolder, suffix, files_ch) //在一个独立的 goroutine 中遍历文件
-	os.MkdirAll(dstFolder, os.ModeDir)
+	os.MkdirAll(dstFolder, os.ModePerm)
 	writeFiles(dstFolder, files_ch, copyFunc)
 }
 
