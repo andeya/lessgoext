@@ -342,8 +342,8 @@ import (
 )
 
 var IndexHandle = lessgo.RegHandler(lessgo.ApiHandler{
-    Desc:    "后台首页",
-    Types: []string{},
+    Desc:   "后台首页",
+    Method: "*",
     Handler: func(ctx lessgo.Context) error {
         ctx.Logger().Info("这里是后台首页,等待1s")
         ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
@@ -361,8 +361,8 @@ import (
 )
 
 var IndexHandle = ApiHandler{
-    Desc:    "后台管理登录操作",
-    Types: []string{"GET", "OPTIONS"},
+    Desc:   "后台管理登录操作",
+    Method: "GET",
     Params: []Param{
         {
             Name:     "user",
@@ -462,8 +462,8 @@ import (
 )
 
 var IndexHandle = lessgo.ApiHandler{
-    Desc:    "首页",
-    Types: []string{"GET"},
+    Desc:   "首页",
+    Method: "GET",
     Handler: func(ctx lessgo.Context) error {
         return ctx.Render(
             200,
@@ -487,7 +487,7 @@ import (
 
 var WebSocketHandle = lessgo.ApiHandler{
     Desc:   "websocket",
-    Types:  []string{"SOCKET"},
+    Method: "WS",
     Params: []lessgo.Param{},
     Handler: func(c lessgo.Context) error {
         for {

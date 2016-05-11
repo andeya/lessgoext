@@ -35,8 +35,8 @@ var (
 	jsonUrl       = "/swagger.json"
 	dstSwagger    = "./SystemView/Swagger"
 	swaggerHandle = &lessgo.ApiHandler{
-		Desc:  "swagger",
-		Types: []string{"GET"},
+		Desc:   "swagger",
+		Method: "GET",
 		Handler: func(c lessgo.Context) error {
 			if once {
 				apidoc.Host = c.Request().Host
@@ -46,8 +46,8 @@ var (
 		},
 	}
 	apidocHandle = &lessgo.ApiHandler{
-		Desc:  "apidoc",
-		Types: []string{"GET"},
+		Desc:   "apidoc",
+		Method: "GET",
 		Handler: func(c lessgo.Context) error {
 			if c.Request().URL.Path == "/apidoc" {
 				return c.Redirect(302, "/apidoc/index.html")
