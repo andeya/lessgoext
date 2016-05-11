@@ -35,21 +35,21 @@ var (
 	jsonUrl       = "/swagger.json"
 	dstSwagger    = "./SystemView/Swagger"
 	swaggerHandle = &lessgo.ApiHandler{
-		Desc:    "swagger",
-		Methods: []string{"GET"},
+		Desc:  "swagger",
+		Types: []string{"GET"},
 		Handler: func(c lessgo.Context) error {
 			if once {
-				apidoc.Host = c.Request().Host()
+				apidoc.Host = c.Request().Host
 				once = false
 			}
 			return c.JSON(200, apidoc)
 		},
 	}
 	apidocHandle = &lessgo.ApiHandler{
-		Desc:    "apidoc",
-		Methods: []string{"GET"},
+		Desc:  "apidoc",
+		Types: []string{"GET"},
 		Handler: func(c lessgo.Context) error {
-			if c.Request().URL().Path() == "/apidoc" {
+			if c.Request().URL.Path == "/apidoc" {
 				return c.Redirect(302, "/apidoc/index.html")
 			}
 			return c.File(path.Join(dstSwagger, c.P(0)))

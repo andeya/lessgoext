@@ -84,7 +84,7 @@ func Secure(configJSON string) lessgo.MiddlewareFunc {
 			if config.XFrameOptions != "" {
 				res.Header().Set(lessgo.HeaderXFrameOptions, config.XFrameOptions)
 			}
-			if (req.IsTLS() || (req.Header().Get(lessgo.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
+			if (req.IsTLS() || (req.Header.Get(lessgo.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
 				subdomains := ""
 				if !config.HSTSExcludeSubdomains {
 					subdomains = "; includeSubdomains"

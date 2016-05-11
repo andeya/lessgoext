@@ -40,10 +40,10 @@ func MethodOverride(configJSON string) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			req := c.Request()
-			if req.Method() == lessgo.POST {
+			if req.Method == lessgo.POST {
 				m := config.Getter(c)
 				if m != "" {
-					req.SetMethod(m)
+					req.Method = m
 				}
 			}
 			return next(c)
@@ -55,7 +55,7 @@ func MethodOverride(configJSON string) lessgo.MiddlewareFunc {
 // the request header.
 func MethodFromHeader(header string) MethodOverrideGetter {
 	return func(c lessgo.Context) string {
-		return c.Request().Header().Get(header)
+		return c.Request().Header.Get(header)
 	}
 }
 

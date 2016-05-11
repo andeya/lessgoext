@@ -50,7 +50,7 @@ func Static(configJSON string) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			fs := http.Dir(config.Root)
-			p := c.Request().URL().Path()
+			p := c.Request().URL.Path
 			if strings.Contains(c.Path(), "*") { // If serving from a group, e.g. `/static*`.
 				p = c.P(0)
 			}
@@ -87,7 +87,7 @@ func Static(configJSON string) lessgo.MiddlewareFunc {
 						res.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
 
 						var list string
-						prefix := c.Request().URL().Path()
+						prefix := c.Request().URL.Path
 						for _, d := range dirs {
 							name := d.Name()
 							color := "#212121"

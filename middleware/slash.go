@@ -23,9 +23,9 @@ func AddTrailingSlash(configJSON string) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			req := c.Request()
-			url := req.URL()
-			path := url.Path()
-			qs := url.QueryString()
+			url := req.URL
+			path := url.Path
+			qs := url.RawQuery
 			if path != "/" && path[len(path)-1] != '/' {
 				path += "/"
 				uri := path
@@ -35,8 +35,8 @@ func AddTrailingSlash(configJSON string) lessgo.MiddlewareFunc {
 				if config.RedirectCode != 0 {
 					return c.Redirect(config.RedirectCode, uri)
 				}
-				req.SetURI(uri)
-				url.SetPath(path)
+				req.RequestURI = uri
+				url.Path = path
 			}
 			return next(c)
 		}
@@ -57,9 +57,9 @@ func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.Middleware
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			req := c.Request()
-			url := req.URL()
-			path := url.Path()
-			qs := url.QueryString()
+			url := req.URL
+			path := url.Path
+			qs := url.RawQuery
 			l := len(path) - 1
 			if path != "/" && path[l] == '/' {
 				path = path[:l]
@@ -70,8 +70,8 @@ func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.Middleware
 				if config.RedirectCode != 0 {
 					return c.Redirect(config.RedirectCode, uri)
 				}
-				req.SetURI(uri)
-				url.SetPath(path)
+				req.RequestURI = uri
+				url.Path = path
 			}
 			return next(c)
 		}

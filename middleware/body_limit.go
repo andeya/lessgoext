@@ -50,7 +50,7 @@ func BodyLimit(configJSON string) lessgo.MiddlewareFunc {
 		return func(c lessgo.Context) error {
 			req := c.Request()
 			r := pool.Get().(*limitedReader)
-			r.Reset(req.Body(), c)
+			r.Reset(req.Body, c)
 			defer pool.Put(r)
 			req.SetBody(r)
 			return next(c)

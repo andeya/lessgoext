@@ -74,7 +74,7 @@ func CORS(configJSON string) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			req := c.Request()
-			origin := c.Request().Header().Get(lessgo.HeaderOrigin)
+			origin := c.Request().Header.Get(lessgo.HeaderOrigin)
 			header := c.Response().Header()
 
 			// Check allowed origins
@@ -87,7 +87,7 @@ func CORS(configJSON string) lessgo.MiddlewareFunc {
 			}
 
 			// Simple request
-			if req.Method() != lessgo.OPTIONS {
+			if req.Method != lessgo.OPTIONS {
 				header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
 				if origin == "" || allowedOrigin == "" {
 					return next(c)
@@ -117,7 +117,7 @@ func CORS(configJSON string) lessgo.MiddlewareFunc {
 			if allowHeaders != "" {
 				header.Set(lessgo.HeaderAccessControlAllowHeaders, allowHeaders)
 			} else {
-				h := req.Header().Get(lessgo.HeaderAccessControlRequestHeaders)
+				h := req.Header.Get(lessgo.HeaderAccessControlRequestHeaders)
 				if h != "" {
 					header.Set(lessgo.HeaderAccessControlAllowHeaders, h)
 				}

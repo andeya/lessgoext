@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgo/engine"
 )
 
 type (
@@ -22,7 +21,7 @@ type (
 	}
 
 	gzipResponseWriter struct {
-		engine.Response
+		*lessgo.Response
 		io.Writer
 	}
 )
@@ -51,7 +50,7 @@ func Gzip(configJSON string) lessgo.MiddlewareFunc {
 		return func(c lessgo.Context) error {
 			res := c.Response()
 			res.Header().Add(lessgo.HeaderVary, lessgo.HeaderAcceptEncoding)
-			if strings.Contains(c.Request().Header().Get(lessgo.HeaderAcceptEncoding), scheme) {
+			if strings.Contains(c.Request().Header.Get(lessgo.HeaderAcceptEncoding), scheme) {
 				rw := res.Writer()
 				gw := pool.Get().(*gzip.Writer)
 				gw.Reset(rw)

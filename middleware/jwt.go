@@ -109,7 +109,7 @@ func JWTWithConfig(config JWTConfig) lessgo.MiddlewareFunc {
 // JWTFromHeader is a `JWTExtractor` that extracts token from the `Authorization` request
 // header.
 func JWTFromHeader(c lessgo.Context) (string, error) {
-	auth := c.Request().Header().Get(lessgo.HeaderAuthorization)
+	auth := c.Request().Header.Get(lessgo.HeaderAuthorization)
 	l := len(bearer)
 	if len(auth) > l+1 && auth[:l] == bearer {
 		return auth[l+1:], nil
