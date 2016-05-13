@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/lessgo/lessgo"
 	"github.com/lessgo/lessgo/utils"
@@ -23,24 +24,27 @@ import (
  */
 
 var (
-	apidoc *Swagger
-	once   = true
-	scheme = func() string {
+	apidoc     *Swagger
+	virtRouter *lessgo.VirtRouter
+	rwlock     sync.RWMutex
+	jsonUrl    = "/swagger.json"
+	dstSwagger = "./SystemView/Swagger"
+	scheme     = func() string {
 		if lessgo.AppConfig.Listen.EnableHTTPS {
 			return "https"
 		} else {
 			return "http"
 		}
 	}()
-	jsonUrl       = "/swagger.json"
-	dstSwagger    = "./SystemView/Swagger"
 	swaggerHandle = &lessgo.ApiHandler{
 		Desc:   "swagger",
 		Method: "GET",
 		Handler: func(c lessgo.Context) error {
-			if once {
-				apidoc.Host = c.Request().Host
-				once = false
+			rwlock.RLock()
+			canSet := virtRouter != lessgo.RootRouter()
+			rwlock.RUnlock()
+			if canSet {
+				resetApidoc(c.Request().Host)
 			}
 			return c.JSON(200, apidoc)
 		},
@@ -81,13 +85,20 @@ func Init() {
 	if !utils.FileExists(dstSwagger) {
 		CopySwaggerFiles()
 	}
+}
 
-	// 构建Swagger对象
-	rootTag := &Tag{
-		Name:        lessgo.RootRouter().Prefix,
-		Description: lessgo.RootRouter().Description(),
+// 构建api文档Swagger对象
+func resetApidoc(host string) {
+	rwlock.Lock()
+	defer rwlock.Unlock()
+	if virtRouter == lessgo.RootRouter() {
+		return
 	}
-	// 生成swagger依赖的json对象
+	virtRouter = lessgo.RootRouter()
+	rootTag := &Tag{
+		Name:        virtRouter.Prefix,
+		Description: virtRouter.Description(),
+	}
 	apidoc = &Swagger{
 		Version: SwaggerVersion,
 		Info: &Info{
@@ -101,6 +112,7 @@ func Init() {
 				Url:  lessgo.AppConfig.Info.LicenseUrl,
 			},
 		},
+		Host:     host,
 		BasePath: "/",
 		Tags:     []*Tag{rootTag},
 		Schemes:  []string{scheme},
@@ -110,7 +122,7 @@ func Init() {
 		// ExternalDocs:        map[string]string{},
 	}
 
-	for _, child := range lessgo.RootRouter().Children() {
+	for _, child := range virtRouter.Children() {
 		if child.Type == lessgo.HANDLER {
 			addpath(child, rootTag)
 			continue
