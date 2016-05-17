@@ -48,10 +48,6 @@ the following files/directories structure:
 │  └─Plugin 公共js插件 (url: /static/plugin)
 ├─SystemAPI 系统模块后端目录
 │  ├─SysRouter.go 系统模块路由文件
-│  ├─SysCommon 后端公共目录
-│  │  ├─Middleware 中间件目录
-│  │  └─Model 数据模型
-│  │  └─... 其他
 │  ├─Xxx Xxx子模块目录
 │  │  ├─ExampleHandle.go Example操作
 │  │  ├─ExampleModel.go Example数据模型及模板函数
@@ -66,10 +62,6 @@ the following files/directories structure:
 │  │  └─... Xxx的子模块目录
 ├─BusinessAPI 业务模块后端目录
 │  ├─BusRouter.go 业务模块路由文件
-│  ├─BusCommon Business公共目录
-│  │  ├─Middleware 中间件目录
-│  │  └─Model 数据模型
-│  │  └─... 其他
 │  ├─Xxx Xxx子模块目录
 │  │  ├─ExampleHandle.go Example操作
 │  │  ├─ExampleModel.go Example数据模型及模板函数
@@ -163,8 +155,6 @@ func createApp(cmd *Command, args []string) int {
 	mrkdir(apppath, "Static", "Img")
 	mrkdir(apppath, "Static", "Plugin")
 	mrkdir(apppath, "SystemAPI")
-	mrkdir(apppath, "SystemAPI", "SysCommon")
-	mrkdir(apppath, "SystemAPI", "SysCommon", "Model")
 	mrkdir(apppath, "SystemAPI", "Admin")
 	mrkdir(apppath, "SystemAPI", "Admin", "Login")
 	mrkdir(apppath, "SystemView")
@@ -172,8 +162,6 @@ func createApp(cmd *Command, args []string) int {
 	mrkdir(apppath, "SystemView", "Admin", "Login")
 	mrkdir(apppath, "BusinessAPI")
 	mrkdir(apppath, "BusinessAPI", "Home")
-	mrkdir(apppath, "BusinessAPI", "BusCommon")
-	mrkdir(apppath, "BusinessAPI", "BusCommon", "Model")
 	mrkdir(apppath, "BusinessView")
 	mrkdir(apppath, "BusinessView", "Home")
 	mrkdir(apppath, "Uploads")
@@ -364,20 +352,8 @@ var IndexHandle = ApiHandler{
     Desc:   "后台管理登录操作",
     Method: "GET",
     Params: []Param{
-        {
-            Name:     "user",
-            In:       "path",
-            Required: true,
-            Format:   "henry",
-            Desc:     "用户名",
-        },
-        {
-            Name:     "password",
-            In:       "path",
-            Required: true,
-            Format:   "12345678",
-            Desc:     "密码",
-        },
+        {"user", "path", true, "henry", "用户名"},
+        {"password", "path", true, "12345678", "密码"},
     },
     Handler: func(ctx Context) error {
         // 测试读取cookie
