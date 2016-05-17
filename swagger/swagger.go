@@ -74,18 +74,19 @@ var (
 
 // 注册"/apidoc"路由
 // 参数allowWAN表示是否允许外网访问
-func Reg(allowWAN bool) {
+func Reg(allowWAN bool, middlewares ...*lessgo.ApiMiddleware) {
 	// 注册路由
 	if allowWAN {
 		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle),
-			lessgo.Leaf("/apidoc*", apidocHandle),
+			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
+			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),
 		)
 		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc".`)
 	} else {
+		middlewares = append([]*lessgo.ApiMiddleware{middleware.OnlyLANAccessWare}, middlewares...)
 		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccessWare),
-			lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
+			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
+			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),
 		)
 		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
 	}
