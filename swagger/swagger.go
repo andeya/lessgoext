@@ -72,14 +72,23 @@ var (
 	}
 )
 
-func Init() {
+// 注册"/apidoc"路由
+// 参数allowWAN表示是否允许外网访问
+func Reg(allowWAN bool) {
 	// 注册路由
-	lessgo.Root(
-		lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccessWare),
-		lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
-	)
-
-	lessgo.Logger().Sys(`Swagger API doc has been enabled, please access "/apidoc/index.html".` + "\n")
+	if allowWAN {
+		lessgo.Root(
+			lessgo.Leaf(jsonUrl, swaggerHandle),
+			lessgo.Leaf("/apidoc*", apidocHandle),
+		)
+		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc".`)
+	} else {
+		lessgo.Root(
+			lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccessWare),
+			lessgo.Leaf("/apidoc*", apidocHandle, middleware.OnlyLANAccessWare),
+		)
+		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
+	}
 
 	// 拷贝swagger文件至当前目录下
 	if !utils.FileExists(dstSwagger) {
@@ -160,16 +169,17 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		if method == lessgo.CONNECT || method == lessgo.TRACE {
 			continue
 		}
+		if method == lessgo.WS {
+			method = lessgo.GET
+		}
 		o := &Opera{
 			Tags:        []string{tag.Name},
 			Summary:     vr.Description(),
 			Description: vr.Description(),
 			OperationId: vr.Id,
-			Produces:    []string{"application/xml", "application/json"},
+			Produces:    []string{"application/xml", "application/json", "text/html", "text/plain", "application/protobuf", "application/msgpack", "application/octet-stream"},
 			Responses: map[string]*Resp{
 				"200": {Description: "Successful operation"},
-				"400": {Description: "Invalid status value"},
-				"404": {Description: "Not found"},
 			},
 			// Security: []map[string][]string{},
 		}

@@ -486,8 +486,11 @@ import (
 )
 
 func main() {
-    swagger.Init()
+    // 开启自动api文档，false表示仅允许内网访问
+    swagger.Reg(false)
+    // 指定根目录URL
     lessgo.SetHome("/home")
+    // 开启网络服务
     lessgo.Run()
 }
 `
