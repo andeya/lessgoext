@@ -28,7 +28,7 @@ var (
 	virtRouter *lessgo.VirtRouter
 	rwlock     sync.RWMutex
 	jsonUrl    = "/swagger.json"
-	dstSwagger = "./SystemView/Swagger"
+	dstSwagger = lessgo.SYS_VIEW_DIR + "/swagger"
 	scheme     = func() string {
 		if lessgo.AppConfig.Listen.EnableHTTPS {
 			return "https"

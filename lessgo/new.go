@@ -33,50 +33,51 @@ The command 'new' creates a folder named [appname] and inside the folder deploy
 the following files/directories structure:
 
 ─Project 项目开发目录
-├─Config 配置文件目录
+├─config 配置文件目录
 │  ├─app.config 系统应用配置文件
 │  └─db.config 数据库配置文件
-├─Common 后端公共目录
-│  ├─Middleware 中间件目录
-│  └─Model 数据模型
-│  └─... 其他
-├─Static 前端公共目录 (url: /static)
-│  ├─Tpl 公共tpl模板目录
-│  ├─Js 公共js目录 (url: /static/js)
-│  ├─Css 公共css目录 (url: /static/css)
-│  ├─Img 公共img目录 (url: /static/img)
-│  └─Plugin 公共js插件 (url: /static/plugin)
-├─SystemAPI 系统模块后端目录
-│  ├─SysRouter.go 系统模块路由文件
-│  ├─Xxx Xxx子模块目录
-│  │  ├─ExampleHandle.go Example操作
-│  │  ├─ExampleModel.go Example数据模型及模板函数
-│  │  └─... Xxx的子模块目录
+├─common 后端公共目录
+│  └─... 如utils等其他
+├─middleware 后端公共中间件目录
+├─static 前端公共目录 (url: /static)
+│  ├─tpl 公共tpl模板目录
+│  ├─js 公共js目录 (url: /static/js)
+│  ├─css 公共css目录 (url: /static/css)
+│  ├─img 公共img目录 (url: /static/img)
+│  └─plugin 公共js插件 (url: /static/plugin)
+├─uploads 默认上传下载目录
+├─router 源码路由配置
+│  ├─sysrouter.go 系统模块路由文件
+│  ├─bizrouter.go 业务模块路由文件
+├─syshandler 系统模块后端目录
+│  ├─xxx 子模块目录
+│  │  ├─example.go example操作
+│  │  └─... xxx的子模块目录
 │  └─... 其他子模块目录
-├─SystemView 系统模块前端目录 (url: /system)
-│  ├─Xxx Xxx子模块目录 (url: /system/xxx)
-│  │  ├─example.tpl ExampleHandle对应的模板文件
+├─sysmodel 系统模块数据模型目录
+├─sysview 系统模块前端目录 (url: /sys)
+│  ├─xxx 与syshandler对应的子模块目录 (url: /sys/xxx)
+│  │  ├─example.tpl 相应操作的模板文件
 │  │  ├─example2.html 无需绑定操作的静态html文件
 │  │  ├─xxx.css css文件(可有多个)
 │  │  ├─xxx.js js文件(可有多个)
-│  │  └─... Xxx的子模块目录
-├─BusinessAPI 业务模块后端目录
-│  ├─BusRouter.go 业务模块路由文件
-│  ├─Xxx Xxx子模块目录
-│  │  ├─ExampleHandle.go Example操作
-│  │  ├─ExampleModel.go Example数据模型及模板函数
-│  │  └─... Xxx的子模块目录
+│  │  └─... xxx的子模块目录
+├─bizhandler 业务模块后端目录
+│  ├─xxx 子模块目录
+│  │  ├─example.go example操作
+│  │  └─... xxx的子模块目录
 │  └─... 其他子模块目录
-├─BusinessView 业务模块前端目录 (url: /business)
-│  ├─Xxx Xxx子模块目录 (url: /business/xxx)
-│  │  ├─example.tpl ExampleHandle对应的模板文件
+├─bizmodel 业务模块数据模型目录
+├─bizview 业务模块前端目录 (url: /biz)
+│  ├─xxx 与bizhandler对应的子模块目录 (url: /biz/xxx)
+│  │  ├─example.tpl 相应操作的模板文件
 │  │  ├─example2.html 无需绑定操作的静态html文件
 │  │  ├─xxx.css css文件(可有多个)
 │  │  ├─xxx.js js文件(可有多个)
-│  │  └─... Xxx的子模块目录
-├─Uploads 默认上传下载目录
-├─Logger 运行日志输出目录
-└─Main.go 应用入口文件
+│  │  └─... xxx的子模块目录
+├─database 默认数据库文件存储目录
+├─logger 运行日志输出目录
+└─main.go 应用入口文件
 `,
 }
 
@@ -145,102 +146,102 @@ func createApp(cmd *Command, args []string) int {
 	fmt.Println("[INFO] Creating application...")
 
 	mrkdir(apppath)
-	mrkdir(apppath, "Common")
-	mrkdir(apppath, "Common", "Middleware")
-	mrkdir(apppath, "Common", "Model")
-	mrkdir(apppath, "Static")
-	mrkdir(apppath, "Static", "Tpl")
-	mrkdir(apppath, "Static", "Css")
-	mrkdir(apppath, "Static", "Js")
-	mrkdir(apppath, "Static", "Img")
-	mrkdir(apppath, "Static", "Plugin")
-	mrkdir(apppath, "SystemAPI")
-	mrkdir(apppath, "SystemAPI", "Admin")
-	mrkdir(apppath, "SystemAPI", "Admin", "Login")
-	mrkdir(apppath, "SystemView")
-	mrkdir(apppath, "SystemView", "Admin")
-	mrkdir(apppath, "SystemView", "Admin", "Login")
-	mrkdir(apppath, "BusinessAPI")
-	mrkdir(apppath, "BusinessAPI", "Home")
-	mrkdir(apppath, "BusinessView")
-	mrkdir(apppath, "BusinessView", "Home")
-	mrkdir(apppath, "Uploads")
+	mrkdir(apppath, "common")
+	mrkdir(apppath, "middleware")
+	mrkdir(apppath, "static")
+	mrkdir(apppath, "static", "tpl")
+	mrkdir(apppath, "static", "css")
+	mrkdir(apppath, "static", "js")
+	mrkdir(apppath, "static", "img")
+	mrkdir(apppath, "static", "plugin")
+	mrkdir(apppath, "uploads")
+	mrkdir(apppath, "router")
+	mrkdir(apppath, "syshandler")
+	mrkdir(apppath, "syshandler", "admin")
+	mrkdir(apppath, "syshandler", "admin", "login")
+	mrkdir(apppath, "sysmodel")
+	mrkdir(apppath, "sysmodel", "admin")
+	mrkdir(apppath, "sysview")
+	mrkdir(apppath, "sysview", "admin")
+	mrkdir(apppath, "sysview", "admin", "login")
+	mrkdir(apppath, "bizhandler")
+	mrkdir(apppath, "bizhandler", "home")
+	mrkdir(apppath, "bizmodel")
+	mrkdir(apppath, "bizview")
+	mrkdir(apppath, "bizview", "home")
 
 	writetofile(
+		createContent(middlewareTest),
+		apppath, "middleware", "test.go",
+	)
+	writetofile(
 		string(_fixture.MustAsset("favicon.ico")),
-		apppath, "Static", "Img", "favicon.ico",
+		apppath, "static", "img", "favicon.ico",
 	)
 	writetofile(
 		JqueryJs,
-		apppath, "Static", "Js", "jquery.js",
+		apppath, "static", "js", "jquery.js",
 	)
 	writetofile(
 		JqueryJsMap,
-		apppath, "Static", "Js", "jquery.min.map",
+		apppath, "static", "js", "jquery.min.map",
 	)
 	writetofile(
-		createContent(MiddlewareTest),
-		apppath, "Common", "Middleware", "test.go",
+		createContent(sysRouter),
+		apppath, "router", "sysrouter.go",
 	)
 	writetofile(
-		createContent(SysRouter),
-		apppath, "SystemAPI", "SysRouter.go",
+		createContent(sysRouter),
+		apppath, "router", "sysrouter.go",
 	)
 	writetofile(
-		createContent(AdminIndexHandle),
-		apppath, "SystemAPI", "Admin", "IndexHandle.go",
+		createContent(bizRouter),
+		apppath, "router", "bizrouter.go",
 	)
 	writetofile(
-		"package Admin\n",
-		apppath, "SystemAPI", "Admin", "IndexModel.go",
+		createContent(adminIndexHandle),
+		apppath, "syshandler", "admin", "index.go",
 	)
 	writetofile(
-		createContent(AdminLoginIndexHandle),
-		apppath, "SystemAPI", "Admin", "Login", "IndexHandle.go",
+		createContent(adminLoginIndexHandle),
+		apppath, "syshandler", "admin", "login", "index.go",
 	)
 	writetofile(
-		createContent(AdminLoginIndexModel),
-		apppath, "SystemAPI", "Admin", "Login", "IndexModel.go",
+		createContent(adminLoginIndexModel),
+		apppath, "sysmodel", "admin", "login.go",
 	)
 	writetofile(
-		createContent(AdminLoginIndexTpl),
-		apppath, "SystemView", "Admin", "Login", "index.tpl",
+		createContent(adminLoginIndexTpl),
+		apppath, "sysview", "admin", "login", "index.tpl",
+	)
+
+	writetofile(
+		createContent(homeIndexHandle),
+		apppath, "bizhandler", "home", "index.go",
 	)
 	writetofile(
-		createContent(BusRouter),
-		apppath, "BusinessAPI", "BusRouter.go",
+		createContent(homeSocketHandle),
+		apppath, "bizhandler", "home", "websocket.go",
 	)
 	writetofile(
-		createContent(HomeIndexHandle),
-		apppath, "BusinessAPI", "Home", "IndexHandle.go",
-	)
-	writetofile(
-		createContent(HomeSocketHandle),
-		apppath, "BusinessAPI", "Home", "WebSocketHandle.go",
-	)
-	writetofile(
-		"package Home\n",
-		apppath, "BusinessAPI", "Home", "IndexModel.go",
-	)
-	writetofile(
-		HomeIndexTpl,
-		apppath, "BusinessView", "Home", "index.tpl",
+		homeIndexTpl,
+		apppath, "bizview", "home", "index.tpl",
 	)
 	writetofile(
 		WebsocketJs,
-		apppath, "BusinessView", "Home", "websocket.js",
+		apppath, "bizview", "home", "websocket.js",
 	)
 	writetofile(
-		GithubJs,
-		apppath, "BusinessView", "Home", "jquery.githubRepoWidget2.js",
+		githubJs,
+		apppath, "bizview", "home", "jquery.githubRepoWidget2.js",
 	)
 	writetofile(
-		HomeIndexCss,
-		apppath, "BusinessView", "Home", "index.css",
+		homeIndexCss,
+		apppath, "bizview", "home", "index.css",
 	)
 	writetofile(
-		createContent(Maingo),
-		apppath, "Main.go",
+		createContent(maingo),
+		apppath, "main.go",
 	)
 
 	ColorLog("[SUCC] New application successfully created!\n")
@@ -268,7 +269,7 @@ func createContent(tpl string) string {
 	return strings.Replace(tpl, "[[[importPrefix]]]", importPrefix, -1)
 }
 
-var MiddlewareTest = `package Middleware
+var middlewareTest = `package middleware
 
 import (
     "github.com/lessgo/lessgo"
@@ -288,40 +289,39 @@ var PrintWare = lessgo.ApiMiddleware{
     },
 }.Reg()
 
-var ShowHeaderWare = lessgo.RegMiddleware(lessgo.ApiMiddleware{
+var ShowHeaderWare = lessgo.ApiMiddleware{
     Name:          "显示Header",
     Desc:          "显示Header测试",
     DefaultConfig: nil,
-    Middleware: func(ctx lessgo.Context) error {
-        logs.Info("测试中间件-显示Header：%v", ctx.Request().Header)
+    Middleware: func(c lessgo.Context) error {
+        logs.Info("测试中间件-显示Header：%v", c.Request().Header)
         return nil
     },
-})
-
+}.Reg()
 `
 
-var SysRouter = `package SystemAPI
+var sysRouter = `package router
 
 import (
     "github.com/lessgo/lessgo"
 
-    "[[[importPrefix]]]/SystemAPI/Admin"
-    "[[[importPrefix]]]/SystemAPI/Admin/Login"
+    "[[[importPrefix]]]/syshandler/admin"
+    "[[[importPrefix]]]/syshandler/admin/login"
 )
 
 func init() {
     lessgo.Root(
         lessgo.Branch("/admin", "后台管理",
-            lessgo.Leaf("/index", Admin.IndexHandle),
+            lessgo.Leaf("/index", admin.IndexHandle),
             lessgo.Branch("/login", "后台登陆",
-                lessgo.Leaf("/", Login.IndexHandle),
+                lessgo.Leaf("/", login.IndexHandle),
             ),
         ),
     )
 }
 `
 
-var AdminIndexHandle = `package Admin
+var adminIndexHandle = `package admin
 
 import (
     "time"
@@ -332,20 +332,22 @@ import (
 var IndexHandle = lessgo.RegHandler(lessgo.ApiHandler{
     Desc:   "后台首页",
     Method: "*",
-    Handler: func(ctx lessgo.Context) error {
-        ctx.Logger().Info("这里是后台首页,等待1s")
-        ctx.Logger().Info("获取参数A = %v", ctx.QueryParam("A"))
-        ctx.Logger().Info("获取参数a = %v", ctx.QueryParam("a"))
+    Handler: func(c lessgo.Context) error {
+        c.Logger().Info("这里是后台首页,等待1s")
+        c.Logger().Info("获取参数A = %v", c.QueryParam("A"))
+        c.Logger().Info("获取参数a = %v", c.QueryParam("a"))
         time.Sleep(1e9)
-        return ctx.JSON(200, "这里是后台首页")
+        return c.JSON(200, "这里是后台首页")
     },
 })
 `
 
-var AdminLoginIndexHandle = `package Login
+var adminLoginIndexHandle = `package login
 
 import (
     . "github.com/lessgo/lessgo"
+
+    "[[[importPrefix]]]/sysmodel/admin"
 )
 
 var IndexHandle = ApiHandler{
@@ -355,43 +357,43 @@ var IndexHandle = ApiHandler{
         {"user", "path", true, "henry", "用户名"},
         {"password", "path", true, "12345678", "密码"},
     },
-    Handler: func(ctx Context) error {
+    Handler: func(c Context) error {
         // 测试读取cookie
-        id, err := ctx.Request().Cookie(AppConfig.Session.SessionName)
-        ctx.Logger().Info("cookie中的%v: %#v (%v)", AppConfig.Session.SessionName, id, err)
+        id, err := c.Request().Cookie(AppConfig.Session.SessionName)
+        c.Logger().Info("cookie中的%v: %#v (%v)", AppConfig.Session.SessionName, id, err)
 
         // 测试session
-        ctx.Logger().Info("从session读取上次请求的输入: %#v", ctx.GetSession("info"))
+        c.Logger().Info("从session读取上次请求的输入: %#v", c.GetSession("info"))
 
-        ctx.SetSession("info", map[string]interface{}{
-            "user":     ctx.Param("user"),
-            "password": ctx.Param("password"),
+        c.SetSession("info", map[string]interface{}{
+            "user":     c.Param("user"),
+            "password": c.Param("password"),
         })
 
-        return ctx.Render(200,
-            "SystemView/Admin/Login/index.tpl",
+        return c.Render(200,
+            "sysview/admin/login/index.tpl",
             map[string]interface{}{
-                "name":       ctx.Param("user"),
-                "password":   ctx.Param("password"),
-                "repeatfunc": repeatfunc,
+                "name":       c.Param("user"),
+                "password":   c.Param("password"),
+                "repeatfunc": admin.Repeatfunc,
             },
         )
     },
 }.Reg()
 `
 
-var AdminLoginIndexModel = `package Login
+var adminLoginIndexModel = `package admin
 
 import (
     "strings"
 )
 
-func repeatfunc(s string, count int) string {
+func Repeatfunc(s string, count int) string {
     return strings.Repeat(s, count)
 }
 `
 
-var AdminLoginIndexTpl = `<!DOCTYPE html>
+var adminLoginIndexTpl = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -405,26 +407,26 @@ var AdminLoginIndexTpl = `<!DOCTYPE html>
 </html>
 `
 
-var BusRouter = `package BusinessAPI
+var bizRouter = `package router
 
 import (
     "github.com/lessgo/lessgo"
 
-    "[[[importPrefix]]]/BusinessAPI/Home"
-    "[[[importPrefix]]]/Common/Middleware"
+    "[[[importPrefix]]]/bizhandler/home"
+    "[[[importPrefix]]]/middleware"
 )
 
 func init() {
     lessgo.Root(
-        lessgo.Leaf("/websocket", Home.WebSocketHandle, Middleware.ShowHeaderWare),
+        lessgo.Leaf("/websocket", home.WebSocketHandle, middleware.ShowHeaderWare),
         lessgo.Branch("/home", "前台",
-            lessgo.Leaf("/index", Home.IndexHandle, Middleware.ShowHeaderWare),
-        ).Use(Middleware.PrintWare),
+            lessgo.Leaf("/index", home.IndexHandle, middleware.ShowHeaderWare),
+        ).Use(middleware.PrintWare),
     )
 }
 `
 
-var HomeIndexHandle = `package Home
+var homeIndexHandle = `package home
 
 import (
     "github.com/lessgo/lessgo"
@@ -433,10 +435,10 @@ import (
 var IndexHandle = lessgo.ApiHandler{
     Desc:   "首页",
     Method: "GET",
-    Handler: func(ctx lessgo.Context) error {
-        return ctx.Render(
+    Handler: func(c lessgo.Context) error {
+        return c.Render(
             200,
-            "BusinessView/Home/index.tpl",
+            "bizview/home/index.tpl",
             map[string]interface{}{
                 "title":   lessgo.NAME,
                 "version": lessgo.VERSION,
@@ -446,7 +448,7 @@ var IndexHandle = lessgo.ApiHandler{
 }.Reg()
 `
 
-var HomeSocketHandle = `package Home
+var homeSocketHandle = `package home
 
 import (
     "time"
@@ -474,15 +476,14 @@ var WebSocketHandle = lessgo.ApiHandler{
 }.Reg()
 `
 
-var Maingo = `package main
+var maingo = `package main
 
 import (
     "github.com/lessgo/lessgo"
     "github.com/lessgo/lessgoext/swagger"
 
-    _ "[[[importPrefix]]]/BusinessAPI"
-    _ "[[[importPrefix]]]/Common/Middleware"
-    _ "[[[importPrefix]]]/SystemAPI"
+    _ "[[[importPrefix]]]/middleware"
+    _ "[[[importPrefix]]]/router"
 )
 
 func main() {
@@ -495,7 +496,7 @@ func main() {
 }
 `
 
-var HomeIndexTpl = `<!DOCTYPE html>
+var homeIndexTpl = `<!DOCTYPE html>
 <html>
 
 <head>
@@ -503,9 +504,9 @@ var HomeIndexTpl = `<!DOCTYPE html>
     <title>{{title}}</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    <link href="/bus/home/index.css" rel="stylesheet" type="text/css" />
+    <link href="/biz/home/index.css" rel="stylesheet" type="text/css" />
     <script src="/static/js/jquery.js"></script>
-    <script src="/bus/home/websocket.js"></script>
+    <script src="/biz/home/websocket.js"></script>
 </head>
 
 <body>
@@ -519,7 +520,7 @@ var HomeIndexTpl = `<!DOCTYPE html>
         </div>
         <!-- github -->
         <div>
-            <script type="text/javascript" src="/bus/home/jquery.githubRepoWidget2.js"></script>
+            <script type="text/javascript" src="/biz/home/jquery.githubRepoWidget2.js"></script>
             <div class="github-widget" data-repo="lessgo/lessgo" style="margin:5px;"></div>
         </div>
     </div>
@@ -528,7 +529,7 @@ var HomeIndexTpl = `<!DOCTYPE html>
 </html>
 `
 
-var HomeIndexCss = `body {
+var homeIndexCss = `body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: 'Source Sans Pro', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -635,7 +636,7 @@ window.onbeforeunload = function() {
 }
 `
 
-var GithubJs = `/**
+var githubJs = `/**
  * Original: https://github.com/JoelSutherland/GitHub-jQuery-Repo-Widget
  * Modify by tsl0922@gmail.com 
  */
