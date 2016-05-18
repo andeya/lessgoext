@@ -329,7 +329,7 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = lessgo.RegHandler(lessgo.ApiHandler{
+var IndexHandle = lessgo.ApiHandler{
     Desc:   "后台首页",
     Method: "*",
     Handler: func(c lessgo.Context) error {
@@ -339,7 +339,7 @@ var IndexHandle = lessgo.RegHandler(lessgo.ApiHandler{
         time.Sleep(1e9)
         return c.JSON(200, "这里是后台首页")
     },
-})
+}.Reg()
 `
 
 var adminLoginIndexHandle = `package login
