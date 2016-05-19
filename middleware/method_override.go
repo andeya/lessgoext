@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"encoding/json"
 	"github.com/lessgo/lessgo"
 )
 
@@ -29,27 +28,31 @@ var (
 // uses it instead of the original method.
 //
 // For security reasons, only `POST` method can be overridden.
-func MethodOverride(configJSON string) lessgo.MiddlewareFunc {
-	config := MethodOverrideConfig{}
-	json.Unmarshal([]byte(configJSON), &config)
-	// Defaults
-	if config.Getter == nil {
-		config.Getter = DefaultMethodOverrideConfig.Getter
-	}
-
-	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-		return func(c lessgo.Context) error {
-			req := c.Request()
-			if req.Method == lessgo.POST {
-				m := config.Getter(c)
-				if m != "" {
-					req.Method = m
-				}
-			}
-			return next(c)
+var MethodOverride = lessgo.ApiMiddleware{
+	Name:   "MethodOverride",
+	Desc:   `Checks for the overridden method from the request and uses it instead of the original method.`,
+	Config: DefaultMethodOverrideConfig,
+	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
+		config := confObject.(MethodOverrideConfig)
+		// Defaults
+		if config.Getter == nil {
+			config.Getter = DefaultMethodOverrideConfig.Getter
 		}
-	}
-}
+
+		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+			return func(c lessgo.Context) error {
+				req := c.Request()
+				if req.Method == lessgo.POST {
+					m := config.Getter(c)
+					if m != "" {
+						req.Method = m
+					}
+				}
+				return next(c)
+			}
+		}
+	},
+}.Reg()
 
 // MethodFromHeader is a `MethodOverrideGetter` that gets overridden method from
 // the request header.

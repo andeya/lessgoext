@@ -83,7 +83,7 @@ func Reg(allowWAN bool, middlewares ...*lessgo.ApiMiddleware) {
 		)
 		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc".`)
 	} else {
-		middlewares = append([]*lessgo.ApiMiddleware{middleware.OnlyLANAccessWare}, middlewares...)
+		middlewares = append([]*lessgo.ApiMiddleware{middleware.OnlyLANAccess}, middlewares...)
 		lessgo.Root(
 			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
 			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),

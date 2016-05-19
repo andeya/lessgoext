@@ -26,36 +26,36 @@ const (
 // For valid credentials it calls the next handler.
 // For invalid credentials, it sends "401 - Unauthorized" response.
 // For empty or invalid `Authorization` header, it sends "400 - Bad Request" response.
-func BasicAuth(fn BasicAuthValidator) lessgo.MiddlewareFunc {
-	return BasicAuthWithConfig(BasicAuthConfig{fn})
-}
+var BasicAuth = lessgo.ApiMiddleware{
+	Name:   "BasicAuthWithConfig",
+	Desc:   `基本的第三方授权中间件，使用前请先在源码配置处理函数。`,
+	Config: nil,
+	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
+		config := BasicAuthConfig{confObject.(BasicAuthValidator)}
+		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+			return func(c lessgo.Context) error {
+				auth := c.Request().Header.Get(lessgo.HeaderAuthorization)
+				l := len(basic)
 
-// BasicAuthWithConfig returns an HTTP basic auth middleware from config.
-// See `BasicAuth()`.
-func BasicAuthWithConfig(config BasicAuthConfig) lessgo.MiddlewareFunc {
-	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-		return func(c lessgo.Context) error {
-			auth := c.Request().Header.Get(lessgo.HeaderAuthorization)
-			l := len(basic)
-
-			if len(auth) > l+1 && auth[:l] == basic {
-				b, err := base64.StdEncoding.DecodeString(auth[l+1:])
-				if err != nil {
-					return err
-				}
-				cred := string(b)
-				for i := 0; i < len(cred); i++ {
-					if cred[i] == ':' {
-						// Verify credentials
-						if config.Validator(cred[:i], cred[i+1:]) {
-							return next(c)
+				if len(auth) > l+1 && auth[:l] == basic {
+					b, err := base64.StdEncoding.DecodeString(auth[l+1:])
+					if err != nil {
+						return err
+					}
+					cred := string(b)
+					for i := 0; i < len(cred); i++ {
+						if cred[i] == ':' {
+							// Verify credentials
+							if config.Validator(cred[:i], cred[i+1:]) {
+								return next(c)
+							}
 						}
 					}
 				}
+				// Need to return `401` for browsers to pop-up login box.
+				c.Response().Header().Set(lessgo.HeaderWWWAuthenticate, basic+" realm=Restricted")
+				return lessgo.ErrUnauthorized
 			}
-			// Need to return `401` for browsers to pop-up login box.
-			c.Response().Header().Set(lessgo.HeaderWWWAuthenticate, basic+" realm=Restricted")
-			return lessgo.ErrUnauthorized
 		}
-	}
-}
+	},
+}.Reg()

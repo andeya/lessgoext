@@ -15,8 +15,10 @@ var (
 )
 
 // Only allow LAN access.
-func OnlyLANAccess(configJSON string) lessgo.MiddlewareFunc {
-	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+var OnlyLANAccess = lessgo.ApiMiddleware{
+	Name: "OnlyLANAccess",
+	Desc: `Only allow LAN access.`,
+	Middleware: func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 		return func(c lessgo.Context) error {
 			remoteAddress := []byte(c.Request().RealRemoteAddr())
 			if bytes.HasPrefix(remoteAddress, lanPrefix_1) ||
@@ -27,5 +29,5 @@ func OnlyLANAccess(configJSON string) lessgo.MiddlewareFunc {
 			}
 			return lessgo.NewHTTPError(http.StatusForbidden, "Only allow LAN access: "+c.Request().RealRemoteAddr())
 		}
-	}
-}
+	},
+}.Reg()

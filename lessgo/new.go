@@ -199,11 +199,11 @@ func createApp(cmd *Command, args []string) int {
 		apppath, "router", "bizrouter.go",
 	)
 	writetofile(
-		createContent(adminIndexHandle),
+		createContent(adminIndex),
 		apppath, "syshandler", "admin", "index.go",
 	)
 	writetofile(
-		createContent(adminLoginIndexHandle),
+		createContent(adminLoginIndex),
 		apppath, "syshandler", "admin", "login", "index.go",
 	)
 	writetofile(
@@ -216,7 +216,7 @@ func createApp(cmd *Command, args []string) int {
 	)
 
 	writetofile(
-		createContent(homeIndexHandle),
+		createContent(homeIndex),
 		apppath, "bizhandler", "home", "index.go",
 	)
 	writetofile(
@@ -276,11 +276,11 @@ import (
     "github.com/lessgo/lessgo/logs"
 )
 
-var PrintWare = lessgo.ApiMiddleware{
-    Name:          "打印测试",
-    Desc:          "打印测试",
-    DefaultConfig: nil,
-    Middleware: func(config string) lessgo.MiddlewareFunc {
+var Print = lessgo.ApiMiddleware{
+    Name:   "打印测试",
+    Desc:   "打印测试",
+    Config: nil,
+    Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
         return lessgo.WrapMiddleware(func(c lessgo.Context) error {
             c.Logger().Info("测试中间件-打印一些东西：1234567890")
             c.Logger().Info("param:%v(len=%v),%v(len=%v)", c.ParamNames(), len(c.ParamNames()), c.ParamValues(), len(c.ParamValues()))
@@ -289,10 +289,10 @@ var PrintWare = lessgo.ApiMiddleware{
     },
 }.Reg()
 
-var ShowHeaderWare = lessgo.ApiMiddleware{
-    Name:          "显示Header",
-    Desc:          "显示Header测试",
-    DefaultConfig: nil,
+var ShowHeader = lessgo.ApiMiddleware{
+    Name:   "显示Header",
+    Desc:   "显示Header测试",
+    Config: nil,
     Middleware: func(c lessgo.Context) error {
         logs.Info("测试中间件-显示Header：%v", c.Request().Header)
         return nil
@@ -312,16 +312,16 @@ import (
 func init() {
     lessgo.Root(
         lessgo.Branch("/admin", "后台管理",
-            lessgo.Leaf("/index", admin.IndexHandle),
+            lessgo.Leaf("/index", admin.Index),
             lessgo.Branch("/login", "后台登陆",
-                lessgo.Leaf("/", login.IndexHandle),
+                lessgo.Leaf("/", login.Index),
             ),
         ),
     )
 }
 `
 
-var adminIndexHandle = `package admin
+var adminIndex = `package admin
 
 import (
     "time"
@@ -329,7 +329,7 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = lessgo.ApiHandler{
+var Index = lessgo.ApiHandler{
     Desc:   "后台首页",
     Method: "*",
     Handler: func(c lessgo.Context) error {
@@ -342,7 +342,7 @@ var IndexHandle = lessgo.ApiHandler{
 }.Reg()
 `
 
-var adminLoginIndexHandle = `package login
+var adminLoginIndex = `package login
 
 import (
     . "github.com/lessgo/lessgo"
@@ -350,7 +350,7 @@ import (
     "[[[importPrefix]]]/sysmodel/admin"
 )
 
-var IndexHandle = ApiHandler{
+var Index = ApiHandler{
     Desc:   "后台管理登录操作",
     Method: "GET",
     Params: []Param{
@@ -422,21 +422,21 @@ import (
 
 func init() {
     lessgo.Root(
-        lessgo.Leaf("/websocket", home.WebSocketHandle, middleware.ShowHeaderWare),
+        lessgo.Leaf("/websocket", home.WebSocket, middleware.ShowHeader),
         lessgo.Branch("/home", "前台",
-            lessgo.Leaf("/index", home.IndexHandle, middleware.ShowHeaderWare),
-        ).Use(middleware.PrintWare),
+            lessgo.Leaf("/index", home.Index, middleware.ShowHeader),
+        ).Use(middleware.Print),
     )
 }
 `
 
-var homeIndexHandle = `package home
+var homeIndex = `package home
 
 import (
     "github.com/lessgo/lessgo"
 )
 
-var IndexHandle = lessgo.ApiHandler{
+var Index = lessgo.ApiHandler{
     Desc:   "首页",
     Method: "GET",
     Handler: func(c lessgo.Context) error {
@@ -460,7 +460,7 @@ import (
     "github.com/lessgo/lessgo"
 )
 
-var WebSocketHandle = lessgo.ApiHandler{
+var WebSocket = lessgo.ApiHandler{
     Desc:   "websocket",
     Method: "WS",
     Params: []lessgo.Param{},

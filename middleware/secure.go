@@ -3,7 +3,6 @@ package middleware
 import (
 	"fmt"
 
-	"encoding/json"
 	"github.com/lessgo/lessgo"
 )
 
@@ -67,34 +66,38 @@ var (
 // Secure middleware provides protection against cross-site scripting (XSS) attack,
 // content type sniffing, clickjacking, insecure connection and other code injection
 // attacks.
-func Secure(configJSON string) lessgo.MiddlewareFunc {
-	config := SecureConfig{}
-	json.Unmarshal([]byte(configJSON), &config)
-	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-		return func(c lessgo.Context) error {
-			req := c.Request()
-			res := c.Response()
+var Secure = lessgo.ApiMiddleware{
+	Name:   "Secure",
+	Desc:   `Provides protection against cross-site scripting (XSS) attack, content type sniffing, clickjacking, insecure connection and other code injection attacks.`,
+	Config: DefaultSecureConfig,
+	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
+		config := confObject.(SecureConfig)
+		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+			return func(c lessgo.Context) error {
+				req := c.Request()
+				res := c.Response()
 
-			if config.XSSProtection != "" {
-				res.Header().Set(lessgo.HeaderXXSSProtection, config.XSSProtection)
-			}
-			if config.ContentTypeNosniff != "" {
-				res.Header().Set(lessgo.HeaderXContentTypeOptions, config.ContentTypeNosniff)
-			}
-			if config.XFrameOptions != "" {
-				res.Header().Set(lessgo.HeaderXFrameOptions, config.XFrameOptions)
-			}
-			if (req.IsTLS() || (req.Header.Get(lessgo.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
-				subdomains := ""
-				if !config.HSTSExcludeSubdomains {
-					subdomains = "; includeSubdomains"
+				if config.XSSProtection != "" {
+					res.Header().Set(lessgo.HeaderXXSSProtection, config.XSSProtection)
 				}
-				res.Header().Set(lessgo.HeaderStrictTransportSecurity, fmt.Sprintf("max-age=%d%s", config.HSTSMaxAge, subdomains))
+				if config.ContentTypeNosniff != "" {
+					res.Header().Set(lessgo.HeaderXContentTypeOptions, config.ContentTypeNosniff)
+				}
+				if config.XFrameOptions != "" {
+					res.Header().Set(lessgo.HeaderXFrameOptions, config.XFrameOptions)
+				}
+				if (req.IsTLS() || (req.Header.Get(lessgo.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
+					subdomains := ""
+					if !config.HSTSExcludeSubdomains {
+						subdomains = "; includeSubdomains"
+					}
+					res.Header().Set(lessgo.HeaderStrictTransportSecurity, fmt.Sprintf("max-age=%d%s", config.HSTSMaxAge, subdomains))
+				}
+				if config.ContentSecurityPolicy != "" {
+					res.Header().Set(lessgo.HeaderContentSecurityPolicy, config.ContentSecurityPolicy)
+				}
+				return next(c)
 			}
-			if config.ContentSecurityPolicy != "" {
-				res.Header().Set(lessgo.HeaderContentSecurityPolicy, config.ContentSecurityPolicy)
-			}
-			return next(c)
 		}
-	}
-}
+	},
+}.Reg()

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,77 +54,81 @@ var (
 
 // CORS returns a Cross-Origin Resource Sharing (CORS) middleware.
 // See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS
-func CORS(configJSON string) lessgo.MiddlewareFunc {
-	config := CORSConfig{}
-	json.Unmarshal([]byte(configJSON), &config)
+var CORS = lessgo.ApiMiddleware{
+	Name: "CORS",
+	Desc: `a Cross-Origin Resource Sharing (CORS) middleware.
+See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS`,
+	Config: DefaultCORSConfig,
+	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
+		config := confObject.(CORSConfig)
+		// Defaults
+		if len(config.AllowOrigins) == 0 {
+			config.AllowOrigins = DefaultCORSConfig.AllowOrigins
+		}
+		if len(config.AllowMethods) == 0 {
+			config.AllowMethods = DefaultCORSConfig.AllowMethods
+		}
+		allowMethods := strings.Join(config.AllowMethods, ",")
+		allowHeaders := strings.Join(config.AllowHeaders, ",")
+		exposeHeaders := strings.Join(config.ExposeHeaders, ",")
+		maxAge := strconv.Itoa(config.MaxAge)
 
-	// Defaults
-	if len(config.AllowOrigins) == 0 {
-		config.AllowOrigins = DefaultCORSConfig.AllowOrigins
-	}
-	if len(config.AllowMethods) == 0 {
-		config.AllowMethods = DefaultCORSConfig.AllowMethods
-	}
-	allowMethods := strings.Join(config.AllowMethods, ",")
-	allowHeaders := strings.Join(config.AllowHeaders, ",")
-	exposeHeaders := strings.Join(config.ExposeHeaders, ",")
-	maxAge := strconv.Itoa(config.MaxAge)
+		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+			return func(c lessgo.Context) error {
+				req := c.Request()
+				origin := c.Request().Header.Get(lessgo.HeaderOrigin)
+				header := c.Response().Header()
 
-	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-		return func(c lessgo.Context) error {
-			req := c.Request()
-			origin := c.Request().Header.Get(lessgo.HeaderOrigin)
-			header := c.Response().Header()
-
-			// Check allowed origins
-			allowedOrigin := ""
-			for _, o := range config.AllowOrigins {
-				if o == "*" || o == origin {
-					allowedOrigin = o
-					break
+				// Check allowed origins
+				allowedOrigin := ""
+				for _, o := range config.AllowOrigins {
+					if o == "*" || o == origin {
+						allowedOrigin = o
+						break
+					}
 				}
-			}
 
-			// Simple request
-			if req.Method != lessgo.OPTIONS {
+				// Simple request
+				if req.Method != lessgo.OPTIONS {
+					header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
+					if origin == "" || allowedOrigin == "" {
+						return next(c)
+					}
+					header.Set(lessgo.HeaderAccessControlAllowOrigin, allowedOrigin)
+					if config.AllowCredentials {
+						header.Set(lessgo.HeaderAccessControlAllowCredentials, "true")
+					}
+					if exposeHeaders != "" {
+						header.Set(lessgo.HeaderAccessControlExposeHeaders, exposeHeaders)
+					}
+					return next(c)
+				}
+
+				// Preflight request
 				header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
+				header.Add(lessgo.HeaderVary, lessgo.HeaderAccessControlRequestMethod)
+				header.Add(lessgo.HeaderVary, lessgo.HeaderAccessControlRequestHeaders)
 				if origin == "" || allowedOrigin == "" {
 					return next(c)
 				}
 				header.Set(lessgo.HeaderAccessControlAllowOrigin, allowedOrigin)
+				header.Set(lessgo.HeaderAccessControlAllowMethods, allowMethods)
 				if config.AllowCredentials {
 					header.Set(lessgo.HeaderAccessControlAllowCredentials, "true")
 				}
-				if exposeHeaders != "" {
-					header.Set(lessgo.HeaderAccessControlExposeHeaders, exposeHeaders)
+				if allowHeaders != "" {
+					header.Set(lessgo.HeaderAccessControlAllowHeaders, allowHeaders)
+				} else {
+					h := req.Header.Get(lessgo.HeaderAccessControlRequestHeaders)
+					if h != "" {
+						header.Set(lessgo.HeaderAccessControlAllowHeaders, h)
+					}
 				}
-				return next(c)
-			}
-
-			// Preflight request
-			header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
-			header.Add(lessgo.HeaderVary, lessgo.HeaderAccessControlRequestMethod)
-			header.Add(lessgo.HeaderVary, lessgo.HeaderAccessControlRequestHeaders)
-			if origin == "" || allowedOrigin == "" {
-				return next(c)
-			}
-			header.Set(lessgo.HeaderAccessControlAllowOrigin, allowedOrigin)
-			header.Set(lessgo.HeaderAccessControlAllowMethods, allowMethods)
-			if config.AllowCredentials {
-				header.Set(lessgo.HeaderAccessControlAllowCredentials, "true")
-			}
-			if allowHeaders != "" {
-				header.Set(lessgo.HeaderAccessControlAllowHeaders, allowHeaders)
-			} else {
-				h := req.Header.Get(lessgo.HeaderAccessControlRequestHeaders)
-				if h != "" {
-					header.Set(lessgo.HeaderAccessControlAllowHeaders, h)
+				if config.MaxAge > 0 {
+					header.Set(lessgo.HeaderAccessControlMaxAge, maxAge)
 				}
+				return c.NoContent(http.StatusNoContent)
 			}
-			if config.MaxAge > 0 {
-				header.Set(lessgo.HeaderAccessControlMaxAge, maxAge)
-			}
-			return c.NoContent(http.StatusNoContent)
 		}
-	}
-}
+	},
+}.Reg()
