@@ -375,7 +375,7 @@ var IndexHandle = ApiHandler{
             map[string]interface{}{
                 "name":       c.Param("user"),
                 "password":   c.Param("password"),
-                "repeatfunc": admin.Repeatfunc,
+                "repeatfunc": admin.Login.Repeatfunc,
             },
         )
     },
@@ -388,7 +388,11 @@ import (
     "strings"
 )
 
-func Repeatfunc(s string, count int) string {
+type login struct{}
+
+var Login = login{}
+
+func (_ login) Repeatfunc(s string, count int) string {
     return strings.Repeat(s, count)
 }
 `
