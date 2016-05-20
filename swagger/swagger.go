@@ -153,10 +153,10 @@ func resetApidoc(host string) {
 			}
 			apidoc.Tags = append(apidoc.Tags, grandsonTag)
 			for _, vr := range grandson.Progeny() {
-				if vr.Type != lessgo.HANDLER {
+				if vr.Type == lessgo.HANDLER {
+					addpath(vr, grandsonTag)
 					continue
 				}
-				addpath(vr, grandsonTag)
 			}
 		}
 	}
