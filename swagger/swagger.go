@@ -106,7 +106,7 @@ func resetApidoc(host string) {
 	}
 	virtRouter = lessgo.RootRouter()
 	rootTag := &Tag{
-		Name:        virtRouter.Prefix,
+		Name:        virtRouter.Path(),
 		Description: virtRouter.Description(),
 	}
 	apidoc = &Swagger{
@@ -138,7 +138,7 @@ func resetApidoc(host string) {
 			continue
 		}
 		childTag := &Tag{
-			Name:        child.Prefix,
+			Name:        child.Path(),
 			Description: child.Description(),
 		}
 		apidoc.Tags = append(apidoc.Tags, childTag)
@@ -148,7 +148,7 @@ func resetApidoc(host string) {
 				continue
 			}
 			grandsonTag := &Tag{
-				Name:        child.Prefix + grandson.Prefix,
+				Name:        grandson.Path(),
 				Description: grandson.Description(),
 			}
 			apidoc.Tags = append(apidoc.Tags, grandsonTag)
