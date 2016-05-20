@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -13,16 +14,16 @@ type (
 	JWTConfig struct {
 		// SigningKey is the key to validate token.
 		// Required.
-		SigningKey string
+		SigningKey string `json:"signing_key"`
 
 		// SigningMethod is used to check token signing method.
 		// Optional, with default value as `HS256`.
-		SigningMethod string
+		SigningMethod string `json:"signing_method"`
 
 		// ContextKey is the key to be used for storing user information from the
 		// token into context.
 		// Optional, with default value as `user`.
-		ContextKey string
+		ContextKey string `json:"context_key"`
 
 		// Extractor is a function that extracts token from the request.
 		// Optional, with default values as `JWTFromHeader`.
@@ -111,13 +112,17 @@ func JWTFromHeader(c lessgo.Context) (string, error) {
 	if len(auth) > l+1 && auth[:l] == bearer {
 		return auth[l+1:], nil
 	}
-	return "", lessgo.NewHTTPError(http.StatusBadRequest, "empty or invalid authorization header="+auth)
+	return "", errors.New("empty or invalid jwt in authorization header")
 }
 
 // JWTFromQuery returns a `JWTExtractor` that extracts token from the provided query
 // parameter.
 func JWTFromQuery(param string) JWTExtractor {
 	return func(c lessgo.Context) (string, error) {
-		return c.QueryParam(param), nil
+		token := c.QueryParam(param)
+		if token == "" {
+			return "", errors.New("empty jwt in query param")
+		}
+		return token, nil
 	}
 }
