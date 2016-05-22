@@ -273,7 +273,6 @@ var middlewareTest = `package middleware
 
 import (
     "github.com/lessgo/lessgo"
-    "github.com/lessgo/lessgo/logs"
 )
 
 var Print = lessgo.ApiMiddleware{
@@ -282,8 +281,8 @@ var Print = lessgo.ApiMiddleware{
     Config: nil,
     Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
         return lessgo.WrapMiddleware(func(c lessgo.Context) error {
-            c.Logger().Info("测试中间件-打印一些东西：1234567890")
-            c.Logger().Info("param:%v(len=%v),%v(len=%v)", c.ParamNames(), len(c.ParamNames()), c.ParamValues(), len(c.ParamValues()))
+            c.Log().Info("测试中间件-打印一些东西：1234567890")
+            c.Log().Info("param:%v(len=%v),%v(len=%v)", c.ParamNames(), len(c.ParamNames()), c.ParamValues(), len(c.ParamValues()))
             return nil
         })
     },
@@ -294,7 +293,7 @@ var ShowHeader = lessgo.ApiMiddleware{
     Desc:   "显示Header测试",
     Config: nil,
     Middleware: func(c lessgo.Context) error {
-        logs.Info("测试中间件-显示Header：%v", c.Request().Header)
+        c.Log().Info("测试中间件-显示Header：%v", c.Request().Header)
         return nil
     },
 }.Reg()
@@ -333,9 +332,9 @@ var Index = lessgo.ApiHandler{
     Desc:   "后台首页",
     Method: "*",
     Handler: func(c lessgo.Context) error {
-        c.Logger().Info("这里是后台首页,等待1s")
-        c.Logger().Info("获取参数A = %v", c.QueryParam("A"))
-        c.Logger().Info("获取参数a = %v", c.QueryParam("a"))
+        c.Log().Info("这里是后台首页,等待1s")
+        c.Log().Info("获取参数A = %v", c.QueryParam("A"))
+        c.Log().Info("获取参数a = %v", c.QueryParam("a"))
         time.Sleep(1e9)
         return c.JSON(200, "这里是后台首页")
     },
@@ -359,11 +358,11 @@ var Index = ApiHandler{
     },
     Handler: func(c Context) error {
         // 测试读取cookie
-        id, err := c.Request().Cookie(AppConfig.Session.SessionName)
-        c.Logger().Info("cookie中的%v: %#v (%v)", AppConfig.Session.SessionName, id, err)
+        id, err := c.Request().Cookie(Config.Session.SessionName)
+        c.Log().Info("cookie中的%v: %#v (%v)", Config.Session.SessionName, id, err)
 
         // 测试session
-        c.Logger().Info("从session读取上次请求的输入: %#v", c.GetSession("info"))
+        c.Log().Info("从session读取上次请求的输入: %#v", c.GetSession("info"))
 
         c.SetSession("info", map[string]interface{}{
             "user":     c.Param("user"),
@@ -470,7 +469,7 @@ var WebSocket = lessgo.ApiHandler{
             if err := c.WsRecvJSON(&req); err != nil {
                 return err
             }
-            c.Logger().Info("req: %v", req)
+            c.Log().Info("req: %v", req)
             if _, err := c.WsSendJSON(map[string]string{"back": time.Now().String()}); err != nil {
                 return err
             }

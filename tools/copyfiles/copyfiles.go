@@ -34,13 +34,13 @@ func walkFiles(srcDir, suffix string, c chan<- *FileInfo) {
 	suffix = strings.ToUpper(suffix)
 	filepath.Walk(srcDir, func(f string, fi os.FileInfo, err error) error { //遍历目录
 		if err != nil {
-			lessgo.Logger().Error("%v", err)
+			lessgo.Log.Error("%v", err)
 			return err
 		}
 		fileInfo := &FileInfo{}
 		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) { //匹配文件
 			if fh, err := os.OpenFile(f, os.O_RDONLY, os.ModePerm); err != nil {
-				lessgo.Logger().Error("%v", err)
+				lessgo.Log.Error("%v", err)
 				return err
 			} else {
 				fileInfo.Handle = fh
@@ -58,29 +58,29 @@ func walkFiles(srcDir, suffix string, c chan<- *FileInfo) {
 //写目标文件
 func writeFiles(dstDir string, c <-chan *FileInfo, copyFunc func(srcHandle, dstHandle *os.File) error) {
 	if err := os.Chdir(dstDir); err != nil { //切换工作路径
-		lessgo.Logger().Fatal("%v", err)
+		lessgo.Log.Fatal("%v", err)
 	}
 	for f := range c {
 		if fi, err := os.Stat(f.RelPath); os.IsNotExist(err) { //目标不存在
 			if f.IsDir {
 				if err := os.MkdirAll(f.RelPath, os.ModeDir); err != nil {
-					lessgo.Logger().Error("%v", err)
+					lessgo.Log.Error("%v", err)
 				}
 			} else {
 				if err := ioCopy(f.Handle, f.RelPath, copyFunc); err != nil {
-					lessgo.Logger().Error("%v", err)
+					lessgo.Log.Error("%v", err)
 				} else {
-					lessgo.Logger().Info("CP: %v", f.RelPath)
+					lessgo.Log.Info("CP: %v", f.RelPath)
 				}
 			}
 		} else if !f.IsDir { //目标存在，而且源不是一个目录
 			if fi.IsDir() != f.IsDir { //检查文件名被目录名占用冲突
-				lessgo.Logger().Error("%v", "filename conflict:", f.RelPath)
+				lessgo.Log.Error("%v", "filename conflict:", f.RelPath)
 			} else if !fi.ModTime().Equal(f.ModTime) { //源文件修改后重写
 				if err := ioCopy(f.Handle, f.RelPath, copyFunc); err != nil {
-					lessgo.Logger().Error("%v", err)
+					lessgo.Log.Error("%v", err)
 				} else {
-					lessgo.Logger().Info("CP: %v", f.RelPath)
+					lessgo.Log.Info("CP: %v", f.RelPath)
 				}
 			}
 		}

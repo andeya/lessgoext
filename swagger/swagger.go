@@ -30,7 +30,7 @@ var (
 	jsonUrl    = "/swagger.json"
 	dstSwagger = lessgo.SYS_VIEW_DIR + "/swagger"
 	scheme     = func() string {
-		if lessgo.AppConfig.Listen.EnableHTTPS {
+		if lessgo.Config.Listen.EnableHTTPS {
 			return "https"
 		} else {
 			return "http"
@@ -81,14 +81,14 @@ func Reg(allowWAN bool, middlewares ...*lessgo.ApiMiddleware) {
 			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
 			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),
 		)
-		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc".`)
+		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc".`)
 	} else {
 		middlewares = append([]*lessgo.ApiMiddleware{middleware.OnlyLANAccess}, middlewares...)
 		lessgo.Root(
 			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
 			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),
 		)
-		lessgo.Logger().Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
+		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
 	}
 
 	// 拷贝swagger文件至当前目录下
@@ -112,14 +112,14 @@ func resetApidoc(host string) {
 	apidoc = &Swagger{
 		Version: SwaggerVersion,
 		Info: &Info{
-			Title:          lessgo.AppConfig.AppName + " API",
-			Description:    lessgo.AppConfig.Info.Description,
-			ApiVersion:     lessgo.AppConfig.Info.Version,
-			Contact:        &Contact{Email: lessgo.AppConfig.Info.Email},
-			TermsOfService: lessgo.AppConfig.Info.TermsOfServiceUrl,
+			Title:          lessgo.Config.AppName + " API",
+			Description:    lessgo.Config.Info.Description,
+			ApiVersion:     lessgo.Config.Info.Version,
+			Contact:        &Contact{Email: lessgo.Config.Info.Email},
+			TermsOfService: lessgo.Config.Info.TermsOfServiceUrl,
 			License: &License{
-				Name: lessgo.AppConfig.Info.License,
-				Url:  lessgo.AppConfig.Info.LicenseUrl,
+				Name: lessgo.Config.Info.License,
+				Url:  lessgo.Config.Info.LicenseUrl,
 			},
 		},
 		Host:     host,
