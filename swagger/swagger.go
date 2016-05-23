@@ -178,7 +178,8 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			Summary:     vr.Description(),
 			Description: vr.Description(),
 			OperationId: vr.Id,
-			Produces:    []string{"application/xml", "application/json", "text/html", "text/plain", "application/protobuf", "application/msgpack", "application/octet-stream"},
+			Consumes:    CommonMIMETypes,
+			Produces:    CommonMIMETypes,
 			Responses: map[string]*Resp{
 				"200": {Description: "Successful operation"},
 			},
@@ -223,7 +224,6 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			o.Parameters = append(o.Parameters, staticParam)
 		}
 
-		o.SetConsumes()
 		operas[strings.ToLower(method)] = o
 	}
 	if _operas, ok := apidoc.Paths[pid]; ok {
