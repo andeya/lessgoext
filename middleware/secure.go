@@ -73,7 +73,7 @@ var Secure = lessgo.ApiMiddleware{
 	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
 		config := confObject.(SecureConfig)
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				req := c.Request()
 				res := c.Response()
 
@@ -86,7 +86,7 @@ var Secure = lessgo.ApiMiddleware{
 				if config.XFrameOptions != "" {
 					res.Header().Set(lessgo.HeaderXFrameOptions, config.XFrameOptions)
 				}
-				if (req.IsTLS() || (req.Header.Get(lessgo.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
+				if (c.IsTLS() || (req.Header.Get(lessgo.HeaderXForwardedProto) == "https")) && config.HSTSMaxAge != 0 {
 					subdomains := ""
 					if !config.HSTSExcludeSubdomains {
 						subdomains = "; includeSubdomains"

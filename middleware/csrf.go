@@ -55,7 +55,7 @@ type (
 
 	// CSRFTokenExtractor defines a function that takes `lessgo.Context` and returns
 	// either a token or an error.
-	CSRFTokenExtractor func(lessgo.Context) (string, error)
+	CSRFTokenExtractor func(*lessgo.Context) (string, error)
 )
 
 var (
@@ -95,7 +95,7 @@ var CSRFWithConfig = lessgo.ApiMiddleware{
 		}
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				req := c.Request()
 
 				// Set CSRF token
@@ -144,7 +144,7 @@ var CSRFWithConfig = lessgo.ApiMiddleware{
 // CSRFTokenFromHeader returns a `CSRFTokenExtractor` that extracts token from the
 // provided request header.
 func CSRFTokenFromHeader(header string) CSRFTokenExtractor {
-	return func(c lessgo.Context) (string, error) {
+	return func(c *lessgo.Context) (string, error) {
 		return c.Request().Header.Get(header), nil
 	}
 }
@@ -152,7 +152,7 @@ func CSRFTokenFromHeader(header string) CSRFTokenExtractor {
 // CSRFTokenFromForm returns a `CSRFTokenExtractor` that extracts token from the
 // provided form parameter.
 func CSRFTokenFromForm(param string) CSRFTokenExtractor {
-	return func(c lessgo.Context) (string, error) {
+	return func(c *lessgo.Context) (string, error) {
 		token := c.FormValue(param)
 		if token == "" {
 			return "", errors.New("empty csrf token in form param")
@@ -164,7 +164,7 @@ func CSRFTokenFromForm(param string) CSRFTokenExtractor {
 // CSRFTokenFromQuery returns a `CSRFTokenExtractor` that extracts token from the
 // provided query parameter.
 func CSRFTokenFromQuery(param string) CSRFTokenExtractor {
-	return func(c lessgo.Context) (string, error) {
+	return func(c *lessgo.Context) (string, error) {
 		token := c.QueryParam(param)
 		if token == "" {
 			return "", errors.New("empty csrf token in query param")

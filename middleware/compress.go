@@ -49,7 +49,7 @@ var Gzip = lessgo.ApiMiddleware{
 		scheme := "gzip"
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				res := c.Response()
 				res.Header().Add(lessgo.HeaderVary, lessgo.HeaderAcceptEncoding)
 				if strings.Contains(c.Request().Header.Get(lessgo.HeaderAcceptEncoding), scheme) {

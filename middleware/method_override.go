@@ -13,7 +13,7 @@ type (
 
 	// MethodOverrideGetter is a function that gets overridden method from the request
 	// Optional, with default values as `MethodFromHeader(lessgo.HeaderXHTTPMethodOverride)`.
-	MethodOverrideGetter func(lessgo.Context) string
+	MethodOverrideGetter func(*lessgo.Context) string
 )
 
 var (
@@ -40,7 +40,7 @@ var MethodOverride = lessgo.ApiMiddleware{
 		}
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				req := c.Request()
 				if req.Method == lessgo.POST {
 					m := config.Getter(c)
@@ -57,7 +57,7 @@ var MethodOverride = lessgo.ApiMiddleware{
 // MethodFromHeader is a `MethodOverrideGetter` that gets overridden method from
 // the request header.
 func MethodFromHeader(header string) MethodOverrideGetter {
-	return func(c lessgo.Context) string {
+	return func(c *lessgo.Context) string {
 		return c.Request().Header.Get(header)
 	}
 }
@@ -65,7 +65,7 @@ func MethodFromHeader(header string) MethodOverrideGetter {
 // MethodFromForm is a `MethodOverrideGetter` that gets overridden method from the
 // form parameter.
 func MethodFromForm(param string) MethodOverrideGetter {
-	return func(c lessgo.Context) string {
+	return func(c *lessgo.Context) string {
 		return c.FormValue(param)
 	}
 }
@@ -73,7 +73,7 @@ func MethodFromForm(param string) MethodOverrideGetter {
 // MethodFromQuery is a `MethodOverrideGetter` that gets overridden method from
 // the query parameter.
 func MethodFromQuery(param string) MethodOverrideGetter {
-	return func(c lessgo.Context) string {
+	return func(c *lessgo.Context) string {
 		return c.QueryParam(param)
 	}
 }

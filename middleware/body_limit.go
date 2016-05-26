@@ -23,7 +23,7 @@ type (
 		BodyLimitConfig
 		reader  io.Reader
 		read    int64
-		context lessgo.Context
+		context *lessgo.Context
 	}
 )
 
@@ -52,12 +52,12 @@ Limit can be specified as '4x' or '4xB', where x is one of the multiple from K, 
 		pool := limitedReaderPool(config)
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				req := c.Request()
 				r := pool.Get().(*limitedReader)
 				r.Reset(req.Body, c)
 				defer pool.Put(r)
-				req.SetBody(r)
+				c.SetRequestBody(r)
 				return next(c)
 			}
 		}
@@ -75,7 +75,7 @@ func (r *limitedReader) Read(b []byte) (n int, err error) {
 	return
 }
 
-func (r *limitedReader) Reset(reader io.Reader, context lessgo.Context) {
+func (r *limitedReader) Reset(reader io.Reader, context *lessgo.Context) {
 	r.reader = reader
 	r.context = context
 }

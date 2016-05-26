@@ -280,7 +280,7 @@ var Print = lessgo.ApiMiddleware{
     Desc:   "打印测试",
     Config: nil,
     Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
-        return lessgo.WrapMiddleware(func(c lessgo.Context) error {
+        return lessgo.WrapMiddleware(func(c *lessgo.Context) error {
             c.Log().Info("测试中间件-打印一些东西：1234567890")
             c.Log().Info("param:%v(len=%v),%v(len=%v)", c.ParamNames(), len(c.ParamNames()), c.ParamValues(), len(c.ParamValues()))
             return nil
@@ -292,7 +292,7 @@ var ShowHeader = lessgo.ApiMiddleware{
     Name:   "显示Header",
     Desc:   "显示Header测试",
     Config: nil,
-    Middleware: func(c lessgo.Context) error {
+    Middleware: func(c *lessgo.Context) error {
         c.Log().Info("测试中间件-显示Header：%v", c.Request().Header)
         return nil
     },
@@ -331,7 +331,7 @@ import (
 var Index = lessgo.ApiHandler{
     Desc:   "后台首页",
     Method: "*",
-    Handler: func(c lessgo.Context) error {
+    Handler: func(c *lessgo.Context) error {
         c.Log().Info("这里是后台首页,等待1s")
         c.Log().Info("获取参数A = %v", c.QueryParam("A"))
         c.Log().Info("获取参数a = %v", c.QueryParam("a"))
@@ -356,7 +356,7 @@ var Index = ApiHandler{
         {"user", "path", true, "henry", "用户名"},
         {"password", "path", true, "12345678", "密码"},
     },
-    Handler: func(c Context) error {
+    Handler: func(c *Context) error {
         // 测试读取cookie
         id, err := c.Request().Cookie(Config.Session.SessionName)
         c.Log().Info("cookie中的%v: %#v (%v)", Config.Session.SessionName, id, err)
@@ -438,7 +438,7 @@ import (
 var Index = lessgo.ApiHandler{
     Desc:   "首页",
     Method: "GET",
-    Handler: func(c lessgo.Context) error {
+    Handler: func(c *lessgo.Context) error {
         return c.Render(
             200,
             "bizview/home/index.tpl",
@@ -463,7 +463,7 @@ var WebSocket = lessgo.ApiHandler{
     Desc:   "websocket",
     Method: "WS",
     Params: []lessgo.Param{},
-    Handler: func(c lessgo.Context) error {
+    Handler: func(c *lessgo.Context) error {
         for {
             var req interface{}
             if err := c.WsRecvJSON(&req); err != nil {

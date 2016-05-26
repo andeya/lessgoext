@@ -22,7 +22,7 @@ var AddTrailingSlash = lessgo.ApiMiddleware{
 	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
 		config := confObject.(TrailingSlashConfig)
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				req := c.Request()
 				url := req.URL
 				path := url.Path
@@ -57,7 +57,7 @@ func RemoveTrailingSlash() lessgo.MiddlewareFunc {
 // See `RemoveTrailingSlash()`.
 func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.MiddlewareFunc {
 	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-		return func(c lessgo.Context) error {
+		return func(c *lessgo.Context) error {
 			req := c.Request()
 			url := req.URL
 			path := url.Path

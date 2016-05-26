@@ -32,7 +32,7 @@ type (
 
 	// JWTExtractor defines a function that takes `lessgo.Context` and returns either
 	// a token or an error.
-	JWTExtractor func(lessgo.Context) (string, error)
+	JWTExtractor func(*lessgo.Context) (string, error)
 )
 
 const (
@@ -80,7 +80,7 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 		}
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				auth, err := config.Extractor(c)
 				if err != nil {
 					return lessgo.NewHTTPError(http.StatusBadRequest, err.Error())
@@ -106,7 +106,7 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 
 // JWTFromHeader is a `JWTExtractor` that extracts token from the `Authorization` request
 // header.
-func JWTFromHeader(c lessgo.Context) (string, error) {
+func JWTFromHeader(c *lessgo.Context) (string, error) {
 	auth := c.Request().Header.Get(lessgo.HeaderAuthorization)
 	l := len(bearer)
 	if len(auth) > l+1 && auth[:l] == bearer {
@@ -118,7 +118,7 @@ func JWTFromHeader(c lessgo.Context) (string, error) {
 // JWTFromQuery returns a `JWTExtractor` that extracts token from the provided query
 // parameter.
 func JWTFromQuery(param string) JWTExtractor {
-	return func(c lessgo.Context) (string, error) {
+	return func(c *lessgo.Context) (string, error) {
 		token := c.QueryParam(param)
 		if token == "" {
 			return "", errors.New("empty jwt in query param")

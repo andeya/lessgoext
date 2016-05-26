@@ -74,7 +74,7 @@ See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS`,
 		maxAge := strconv.Itoa(config.MaxAge)
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				req := c.Request()
 				origin := c.Request().Header.Get(lessgo.HeaderOrigin)
 				header := c.Response().Header()

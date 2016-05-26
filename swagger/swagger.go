@@ -39,7 +39,7 @@ var (
 	swaggerHandle = &lessgo.ApiHandler{
 		Desc:   "swagger",
 		Method: "GET",
-		Handler: func(c lessgo.Context) error {
+		Handler: func(c *lessgo.Context) error {
 			rwlock.RLock()
 			canSet := virtRouter != lessgo.RootRouter()
 			rwlock.RUnlock()
@@ -52,8 +52,8 @@ var (
 	apidocHandle = &lessgo.ApiHandler{
 		Desc:   "apidoc",
 		Method: "GET",
-		Handler: func(c lessgo.Context) error {
-			if c.Request().URL.Path == "/apidoc" {
+		Handler: func(c *lessgo.Context) error {
+			if c.Request().URL.Path == "/apidoc/" {
 				return c.Redirect(302, "/apidoc/index.html")
 			}
 			return c.File(path.Join(dstSwagger, c.P(0)))
@@ -79,14 +79,14 @@ func Reg(allowWAN bool, middlewares ...*lessgo.ApiMiddleware) {
 	if allowWAN {
 		lessgo.Root(
 			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
-			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),
+			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middlewares...),
 		)
 		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc".`)
 	} else {
 		middlewares = append([]*lessgo.ApiMiddleware{middleware.OnlyLANAccess}, middlewares...)
 		lessgo.Root(
 			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
-			lessgo.Leaf("/apidoc*", apidocHandle, middlewares...),
+			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middlewares...),
 		)
 		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
 	}
@@ -132,7 +132,7 @@ func resetApidoc(host string) {
 		// ExternalDocs:        map[string]string{},
 	}
 
-	for _, child := range virtRouter.Children() {
+	for _, child := range virtRouter.Children {
 		if child.Type == lessgo.HANDLER {
 			addpath(child, rootTag)
 			continue
@@ -142,7 +142,7 @@ func resetApidoc(host string) {
 			Description: child.Description(),
 		}
 		apidoc.Tags = append(apidoc.Tags, childTag)
-		for _, grandson := range child.Children() {
+		for _, grandson := range child.Children {
 			if grandson.Type == lessgo.HANDLER {
 				addpath(grandson, childTag)
 				continue
@@ -272,9 +272,9 @@ func properties(obj interface{}) map[string]*Property {
 
 func createPath(vr *lessgo.VirtRouter) string {
 	u := vr.Path()
-	if strings.HasSuffix(u, "*") {
-		u = strings.TrimSuffix(u, "*")
-		u = path.Join(u, "{static}")
+	a := strings.Split(u, "/*")
+	if len(a) > 1 {
+		u = path.Join(a[0], "{static}")
 	}
 	s := strings.Split(u, "/:")
 	p := s[0]

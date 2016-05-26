@@ -50,7 +50,7 @@ var Static = lessgo.ApiMiddleware{
 		}
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-			return func(c lessgo.Context) error {
+			return func(c *lessgo.Context) error {
 				fs := http.Dir(config.Root)
 				p := c.Request().URL.Path
 				if strings.Contains(c.Path(), "*") { // If serving from a group, e.g. `/static*`.
