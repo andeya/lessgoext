@@ -17,7 +17,7 @@ func init() {
 		lessgo.Log.Error(err.Error())
 	}
 
-	dbService := &DBService{
+	dbService = &DBService{
 		List: map[string]*gorm.DB{},
 	}
 	for _, conf := range dbServiceConfig.DBList {

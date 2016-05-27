@@ -15,36 +15,38 @@ type DBService struct {
 	List    map[string]*gorm.DB
 }
 
+var dbService *DBService
+
 /**
  * 获取默认数据库引擎
  */
-func (d *DBService) DefaultDB() *gorm.DB {
-	return d.Default
+func DefaultDB() *gorm.DB {
+	return dbService.Default
 }
 
 /**
  * 获取指定数据库引擎
  */
-func (d *DBService) GetDB(name string) (*gorm.DB, bool) {
-	engine, ok := d.List[name]
+func GetDB(name string) (*gorm.DB, bool) {
+	engine, ok := dbService.List[name]
 	return engine, ok
 }
 
 /**
  * 获取全部数据库引擎列表
  */
-func (d *DBService) DBList() map[string]*gorm.DB {
-	return d.List
+func DBList() map[string]*gorm.DB {
+	return dbService.List
 }
 
 /**
  * 设置默认数据库引擎
  */
-func (d *DBService) SetDefaultDB(name string) error {
-	engine, ok := d.List[name]
+func SetDefaultDB(name string) error {
+	engine, ok := dbService.List[name]
 	if !ok {
 		return fmt.Errorf("Specified database does not exist: %v.", name)
 	}
-	d.Default = engine
+	dbService.Default = engine
 	return nil
 }
