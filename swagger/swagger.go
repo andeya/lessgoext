@@ -107,7 +107,7 @@ func resetApidoc(host string) {
 	virtRouter = lessgo.RootRouter()
 	rootTag := &Tag{
 		Name:        virtRouter.Path(),
-		Description: virtRouter.Description(),
+		Description: tagDesc(virtRouter.Description()),
 	}
 	apidoc = &Swagger{
 		Version: SwaggerVersion,
@@ -139,7 +139,7 @@ func resetApidoc(host string) {
 		}
 		childTag := &Tag{
 			Name:        child.Path(),
-			Description: child.Description(),
+			Description: tagDesc(child.Description()),
 		}
 		apidoc.Tags = append(apidoc.Tags, childTag)
 		for _, grandson := range child.Children {
@@ -149,7 +149,7 @@ func resetApidoc(host string) {
 			}
 			grandsonTag := &Tag{
 				Name:        grandson.Path(),
-				Description: grandson.Description(),
+				Description: tagDesc(grandson.Description()),
 			}
 			apidoc.Tags = append(apidoc.Tags, grandsonTag)
 			for _, vr := range grandson.Progeny() {
@@ -175,8 +175,8 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		}
 		o := &Opera{
 			Tags:        []string{tag.Name},
-			Summary:     vr.Description(),
-			Description: vr.Description(),
+			Summary:     summary(vr.Description()),
+			Description: desc(vr.Description()),
 			OperationId: vr.Id,
 			Consumes:    CommonMIMETypes,
 			Produces:    CommonMIMETypes,
@@ -285,6 +285,18 @@ func createPath(vr *lessgo.VirtRouter) string {
 		p = path.Join(p, "{"+param+"}")
 	}
 	return p
+}
+
+func tagDesc(desc string) string {
+	return strings.TrimSpace(desc)
+}
+
+func summary(desc string) string {
+	return strings.TrimSpace(strings.Split(strings.TrimSpace(desc), "\n")[0])
+}
+
+func desc(desc string) string {
+	return "<pre>" + strings.TrimSpace(desc) + "</pre>"
 }
 
 type FileInfo struct {
