@@ -3,6 +3,7 @@ package xorm
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
@@ -12,15 +13,23 @@ import (
 )
 
 // 注册数据库服务
-func init() {
-	err := dbServiceConfig.LoadDBConfig(DBCONFIG_FILE)
-	if err != nil {
-		lessgo.Log.Error(err.Error())
-	}
-
+func initDBService() (dbService *DBService) {
 	dbService = &DBService{
 		List: map[string]*xorm.Engine{},
 	}
+
+	defer func() {
+		if dbService.Default == nil {
+			time.Sleep(2e9)
+		}
+	}()
+
+	err := dbServiceConfig.LoadDBConfig(DBCONFIG_FILE)
+	if err != nil {
+		lessgo.Log.Error(err.Error())
+		return
+	}
+
 	for _, conf := range dbServiceConfig.DBList {
 		engine, err := xorm.NewEngine(conf.Driver, conf.ConnString)
 		if err != nil {
@@ -36,6 +45,7 @@ func init() {
 		engine.SetDisableGlobalCache(conf.DisableCache)
 		engine.ShowSQL(conf.ShowSql)
 		engine.ShowExecTime(conf.ShowExecTime)
+
 		if (conf.TableFix == "prefix" || conf.TableFix == "suffix") && len(conf.TableSpace) > 0 {
 			var impr core.IMapper
 			if conf.TableSnake {
@@ -49,6 +59,7 @@ func init() {
 				engine.SetTableMapper(core.NewSuffixMapper(impr, conf.TableSpace))
 			}
 		}
+
 		if (conf.ColumnFix == "prefix" || conf.ColumnFix == "suffix") && len(conf.ColumnSpace) > 0 {
 			var impr core.IMapper
 			if conf.ColumnSnake {
@@ -78,4 +89,5 @@ func init() {
 			dbService.Default = engine
 		}
 	}
+	return
 }

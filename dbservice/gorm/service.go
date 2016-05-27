@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	//_ "github.com/jinzhu/gorm/dialects/mssql"
+	_ "github.com/jinzhu/gorm/dialects/mssql"
 	_ "github.com/jinzhu/gorm/dialects/mysql" //github.com/go-sql-driver/mysql
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	//	_ "github.com/jinzhu/gorm/dialects/sqlite" //github.com/mattn/go-sqlite3
+	// _ "github.com/jinzhu/gorm/dialects/sqlite" //github.com/mattn/go-sqlite3
 )
 
 type DBService struct {
@@ -15,7 +15,7 @@ type DBService struct {
 	List    map[string]*gorm.DB
 }
 
-var dbService *DBService
+var dbService = initDBService()
 
 /**
  * 获取默认数据库引擎

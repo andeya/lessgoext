@@ -3,6 +3,7 @@ package gorm
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -11,15 +12,22 @@ import (
 )
 
 // 注册数据库服务
-func init() {
+func initDBService() (dbService *DBService) {
+	dbService = &DBService{
+		List: map[string]*gorm.DB{},
+	}
+
+	defer func() {
+		if dbService.Default == nil {
+			time.Sleep(2e9)
+		}
+	}()
+
 	err := dbServiceConfig.LoadDBConfig(DBCONFIG_FILE)
 	if err != nil {
 		lessgo.Log.Error(err.Error())
 	}
 
-	dbService = &DBService{
-		List: map[string]*gorm.DB{},
-	}
 	for _, conf := range dbServiceConfig.DBList {
 		engine, err := gorm.Open(conf.Driver, conf.ConnString)
 		if err != nil {
@@ -49,4 +57,5 @@ func init() {
 			dbService.Default = engine
 		}
 	}
+	return
 }

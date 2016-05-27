@@ -25,7 +25,7 @@ type (
 	}
 )
 
-var dbService *DBService
+var dbService = initDBService()
 
 /**
  * 获取默认数据库引擎
