@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgo/utils/bytes"
+	"github.com/lessgo/lessgoext/bitconv"
 )
 
 type (
@@ -44,7 +44,7 @@ Limit can be specified as '4x' or '4xB', where x is one of the multiple from K, 
 	Config: BodyLimitConfig{},
 	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
 		config := confObject.(BodyLimitConfig)
-		limit, err := bytes.Parse(config.Limit)
+		limit, err := bitconv.Parse(config.Limit)
 		if err != nil {
 			panic(fmt.Errorf("invalid body-limit=%s", config.Limit))
 		}

@@ -149,7 +149,7 @@ func TestAll(t *testing.T) {
 		Algorithm: otp.AlgorithmSHA1,
 	}
 	t.Log(secSha1)
-	passcode, err := GenerateCodeCustom(secSha1, 5432, vo)
+	passcode, err := GenerateCodeCustom(secSha1, 5430, vo)
 	t.Logf("%v:%v", passcode, err)
 	valid, err := ValidateCustom(passcode, secSha1, 5432, vo)
 	t.Logf("%v:%v", valid, err)

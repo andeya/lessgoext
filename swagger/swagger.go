@@ -14,8 +14,8 @@ import (
 
 	"github.com/lessgo/lessgo"
 	"github.com/lessgo/lessgo/utils"
+	"github.com/lessgo/lessgoext/copyfiles"
 	"github.com/lessgo/lessgoext/middleware"
-	"github.com/lessgo/lessgoext/tools/copyfiles"
 )
 
 /*
