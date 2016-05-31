@@ -54,7 +54,7 @@ var (
 func TestValidateRFCMatrix(t *testing.T) {
 
 	for _, tx := range rfcMatrixTCs {
-		valid, err := ValidateCustom(tx.TOTP, tx.Counter, tx.Secret,
+		valid, err := ValidateCustom(tx.TOTP, tx.Secret, tx.Counter,
 			ValidateOpts{
 				Digits:    otp.DigitsSix,
 				Algorithm: tx.Mode,
@@ -82,7 +82,7 @@ func TestGenerateRFCMatrix(t *testing.T) {
 func TestValidateInvalid(t *testing.T) {
 	secSha1 := base32.StdEncoding.EncodeToString([]byte("12345678901234567890"))
 
-	valid, err := ValidateCustom("foo", 11, secSha1,
+	valid, err := ValidateCustom("foo", secSha1, 11,
 		ValidateOpts{
 			Digits:    otp.DigitsSix,
 			Algorithm: otp.AlgorithmSHA1,
@@ -90,7 +90,7 @@ func TestValidateInvalid(t *testing.T) {
 	require.Equal(t, otp.ErrValidateInputInvalidLength6, err, "Expected Invalid length error.")
 	require.Equal(t, false, valid, "Valid should be false when we have an error.")
 
-	valid, err = ValidateCustom("foo", 11, secSha1,
+	valid, err = ValidateCustom("foo", secSha1, 11,
 		ValidateOpts{
 			Digits:    otp.DigitsEight,
 			Algorithm: otp.AlgorithmSHA1,
@@ -98,7 +98,7 @@ func TestValidateInvalid(t *testing.T) {
 	require.Equal(t, otp.ErrValidateInputInvalidLength8, err, "Expected Invalid length error.")
 	require.Equal(t, false, valid, "Valid should be false when we have an error.")
 
-	valid, err = ValidateCustom("000000", 11, secSha1,
+	valid, err = ValidateCustom("000000", secSha1, 11,
 		ValidateOpts{
 			Digits:    otp.DigitsSix,
 			Algorithm: otp.AlgorithmSHA1,
@@ -106,7 +106,7 @@ func TestValidateInvalid(t *testing.T) {
 	require.NoError(t, err, "Expected no error.")
 	require.Equal(t, false, valid, "Valid should be false.")
 
-	valid = Validate("000000", 11, secSha1)
+	valid = Validate("000000", secSha1, 11)
 	require.Equal(t, false, valid, "Valid should be false.")
 }
 
@@ -141,4 +141,18 @@ func TestGenerate(t *testing.T) {
 	})
 	require.Equal(t, otp.ErrGenerateMissingAccountName, err, "generate missing account name.")
 	require.Nil(t, k, "key should be nil on error.")
+}
+
+func TestAll(t *testing.T) {
+	vo := ValidateOpts{
+		Digits:    otp.DigitsEight,
+		Algorithm: otp.AlgorithmSHA1,
+	}
+	t.Log(secSha1)
+	passcode, err := GenerateCodeCustom(secSha1, 5432, vo)
+	t.Logf("%v:%v", passcode, err)
+	valid, err := ValidateCustom(passcode, secSha1, 5432, vo)
+	t.Logf("%v:%v", valid, err)
+	valid, err = ValidateCustom(passcode, secSha1, 5430, vo)
+	t.Logf("%v:%v", valid, err)
 }

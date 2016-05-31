@@ -137,3 +137,20 @@ func TestGenerate(t *testing.T) {
 	require.NoError(t, err, "generate larger TOTP")
 	require.Equal(t, 32, len(k.Secret()), "Secret is 32 bytes long as base32.")
 }
+
+func TestAll(t *testing.T) {
+	vo := ValidateOpts{
+		Period:    5,
+		Digits:    otp.DigitsEight,
+		Algorithm: otp.AlgorithmSHA1,
+	}
+	t.Log(secSha1)
+	passcode, err := GenerateCodeCustom(secSha1, time.Now().UTC(), vo)
+	t.Logf("%v:%v", passcode, err)
+	time.Sleep(1e9)
+	valid, err := ValidateCustom(passcode, secSha1, time.Now().UTC(), vo)
+	t.Logf("%v:%v", valid, err)
+	time.Sleep(5e9)
+	valid, err = ValidateCustom(passcode, secSha1, time.Now().UTC(), vo)
+	t.Logf("%v:%v", valid, err)
+}

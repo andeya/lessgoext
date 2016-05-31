@@ -108,7 +108,7 @@ func ValidateCustom(passcode string, secret string, t time.Time, opts ValidateOp
 	}
 
 	for _, counter := range counters {
-		rv, err := hotp.ValidateCustom(passcode, counter, secret, hotp.ValidateOpts{
+		rv, err := hotp.ValidateCustom(passcode, secret, counter, hotp.ValidateOpts{
 			Digits:    opts.Digits,
 			Algorithm: opts.Algorithm,
 		})

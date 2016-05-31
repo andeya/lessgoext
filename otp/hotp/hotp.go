@@ -36,11 +36,11 @@ const debug = false
 // Validate a HOTP passcode given a counter and secret.
 // This is a shortcut for ValidateCustom, with parameters that
 // are compataible with Google-Authenticator.
-func Validate(passcode string, counter uint64, secret string) bool {
+func Validate(passcode string, secret string, counter uint64) bool {
 	rv, _ := ValidateCustom(
 		passcode,
-		counter,
 		secret,
+		counter,
 		ValidateOpts{
 			Digits:    otp.DigitsSix,
 			Algorithm: otp.AlgorithmSHA1,
@@ -108,7 +108,7 @@ func GenerateCodeCustom(secret string, counter uint64, opts ValidateOpts) (passc
 
 // ValidateCustom validates an HOTP with customizable options. Most users should
 // use Validate().
-func ValidateCustom(passcode string, counter uint64, secret string, opts ValidateOpts) (bool, error) {
+func ValidateCustom(passcode string, secret string, counter uint64, opts ValidateOpts) (bool, error) {
 	passcode = strings.TrimSpace(passcode)
 
 	switch opts.Digits {
