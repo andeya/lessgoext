@@ -48,7 +48,7 @@ var (
 	// DefaultCORSConfig is the default CORS middleware config.
 	DefaultCORSConfig = CORSConfig{
 		AllowOrigins: []string{"*"},
-		AllowMethods: []string{lessgo.GET, lessgo.HEAD, lessgo.PUT, lessgo.POST, lessgo.DELETE},
+		AllowMethods: []string{lessgo.GET, lessgo.HEAD, lessgo.PUT, lessgo.PATCH, lessgo.POST, lessgo.DELETE},
 	}
 )
 
@@ -76,8 +76,10 @@ See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS`,
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 			return func(c *lessgo.Context) error {
 				req := c.Request()
-				origin := c.Request().Header.Get(lessgo.HeaderOrigin)
-				header := c.Response().Header()
+				res := c.Response()
+				header := res.Header()
+				origin := req.Header.Get(lessgo.HeaderOrigin)
+				_, originSet := req.Header[lessgo.HeaderOrigin]
 
 				// Check allowed origins
 				allowedOrigin := ""
@@ -91,7 +93,7 @@ See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS`,
 				// Simple request
 				if req.Method != lessgo.OPTIONS {
 					header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
-					if origin == "" || allowedOrigin == "" {
+					if !originSet || allowedOrigin == "" {
 						return next(c)
 					}
 					header.Set(lessgo.HeaderAccessControlAllowOrigin, allowedOrigin)
@@ -108,7 +110,7 @@ See https://developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS`,
 				header.Add(lessgo.HeaderVary, lessgo.HeaderOrigin)
 				header.Add(lessgo.HeaderVary, lessgo.HeaderAccessControlRequestMethod)
 				header.Add(lessgo.HeaderVary, lessgo.HeaderAccessControlRequestHeaders)
-				if origin == "" || allowedOrigin == "" {
+				if !originSet || allowedOrigin == "" {
 					return next(c)
 				}
 				header.Set(lessgo.HeaderAccessControlAllowOrigin, allowedOrigin)

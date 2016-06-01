@@ -12,17 +12,21 @@ import (
 type (
 	// StaticConfig defines the config for static middleware.
 	StaticConfig struct {
-		// Root is the directory from where the static content is served.
+		// Root directory from where the static content is served.
 		// Required.
 		Root string `json:"root"`
 
-		// Index is the list of index files to be searched and used when serving
-		// a directory.
-		// Optional, with default value as []string{"index.html"}.
-		Index []string `json:"index"`
+		// Index file for serving a directory.
+		// Optional. Default value "index.html".
+		Index string `json:"index"`
 
-		// Browse is a flag to enable/disable directory browsing.
-		// Optional, with default value as false.
+		// Enable HTML5 mode by forwarding all not-found requests to root so that
+		// SPA (single-page application) can handle the routing.
+		// Optional. Default value false.
+		HTML5 bool `json:"html5"`
+
+		// Enable directory browsing.
+		// Optional. Default value false.
 		Browse bool `json:"browse"`
 	}
 )
@@ -30,8 +34,7 @@ type (
 var (
 	// DefaultStaticConfig is the default static middleware config.
 	DefaultStaticConfig = StaticConfig{
-		Index:  []string{"index.html"},
-		Browse: true,
+		Index: "index.html",
 	}
 )
 
@@ -45,7 +48,7 @@ var Static = lessgo.ApiMiddleware{
 		config := confObject.(StaticConfig)
 
 		// Defaults
-		if config.Index == nil {
+		if config.Index == "" {
 			config.Index = DefaultStaticConfig.Index
 		}
 
@@ -59,7 +62,18 @@ var Static = lessgo.ApiMiddleware{
 				file := path.Clean(p)
 				f, err := fs.Open(file)
 				if err != nil {
-					return next(c)
+					// HTML5 mode
+					err = next(c)
+					if he, ok := err.(*lessgo.HTTPError); ok {
+						if config.HTML5 && he.Code == http.StatusNotFound {
+							file = ""
+							f, err = fs.Open(file)
+						} else {
+							return err
+						}
+					} else {
+						return err
+					}
 				}
 				defer f.Close()
 				fi, err := f.Stat()
@@ -75,40 +89,40 @@ var Static = lessgo.ApiMiddleware{
 					d := f
 
 					// Index file
-					// TODO: search all files
-					file = path.Join(file, config.Index[0])
+					file = path.Join(file, config.Index)
 					f, err = fs.Open(file)
-					if err != nil {
-						if config.Browse {
-							dirs, err := d.Readdir(-1)
-							if err != nil {
+					if err == nil {
+						// Index file
+						if fi, err = f.Stat(); err != nil {
+							return err
+						}
+					} else if err != nil && config.Browse {
+						dirs, err := d.Readdir(-1)
+						if err != nil {
+							return err
+						}
+
+						// Create a directory index
+						res := c.Response()
+						res.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
+						if _, err = fmt.Fprintf(res, "<pre>\n"); err != nil {
+							return err
+						}
+						for _, d := range dirs {
+							name := d.Name()
+							color := "#212121"
+							if d.IsDir() {
+								color = "#e91e63"
+								name += "/"
+							}
+							if _, err = fmt.Fprintf(res, "<a href=\"%s\" style=\"color: %s;\">%s</a>\n", name, color, name); err != nil {
 								return err
 							}
-							// Create a directory index
-							res := c.Response()
-							res.Header().Set(lessgo.HeaderContentType, lessgo.MIMETextHTMLCharsetUTF8)
-
-							var list string
-							prefix := c.Request().URL.Path
-							for _, d := range dirs {
-								name := d.Name()
-								color := "#212121"
-								if d.IsDir() {
-									color = "#e91e63"
-									name += "/"
-								}
-								list += fmt.Sprintf("<p><a href=\"%s\" style=\"color: %s;\">%s</a></p>\n", path.Join(prefix, name), color, name)
-							}
-							_, err = res.Write([]byte(list))
-							if err == nil {
-								return nil
-							}
 						}
+						_, err = fmt.Fprintf(res, "</pre>\n")
 						return err
-					}
-					defer f.Close()
-					if fi, err = f.Stat(); err != nil { // Index file
-						return err
+					} else {
+						return next(c)
 					}
 				}
 				return c.ServeContent(f, fi.Name(), fi.ModTime())

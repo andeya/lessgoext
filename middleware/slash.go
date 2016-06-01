@@ -33,9 +33,11 @@ var AddTrailingSlash = lessgo.ApiMiddleware{
 					if qs != "" {
 						uri += "?" + qs
 					}
+					// Redirect
 					if config.RedirectCode != 0 {
 						return c.Redirect(config.RedirectCode, uri)
 					}
+					// Forward
 					req.RequestURI = uri
 					url.Path = path
 				}
@@ -47,35 +49,35 @@ var AddTrailingSlash = lessgo.ApiMiddleware{
 
 // RemoveTrailingSlash returns a root level (before router) middleware which removes
 // a trailing slash from the request URI.
-//
-// Usage `Echo#Pre(RemoveTrailingSlash())`
-func RemoveTrailingSlash() lessgo.MiddlewareFunc {
-	return RemoveTrailingSlashWithConfig(TrailingSlashConfig{})
-}
-
-// RemoveTrailingSlashWithConfig returns a RemoveTrailingSlash middleware from config.
-// See `RemoveTrailingSlash()`.
-func RemoveTrailingSlashWithConfig(config TrailingSlashConfig) lessgo.MiddlewareFunc {
-	return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
-		return func(c *lessgo.Context) error {
-			req := c.Request()
-			url := req.URL
-			path := url.Path
-			qs := url.RawQuery
-			l := len(path) - 1
-			if path != "/" && path[l] == '/' {
-				path = path[:l]
-				uri := path
-				if qs != "" {
-					uri += "?" + qs
+var RemoveTrailingSlash = lessgo.ApiMiddleware{
+	Name:   "TrailingSlash",
+	Desc:   "a root level (before router) middleware which adds a trailing slash to the request `URL#Path`.",
+	Config: TrailingSlashConfig{},
+	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
+		config := confObject.(TrailingSlashConfig)
+		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+			return func(c *lessgo.Context) error {
+				req := c.Request()
+				url := req.URL
+				path := url.Path
+				qs := url.RawQuery
+				l := len(path) - 1
+				if l >= 0 && path != "/" && path[l] == '/' {
+					path = path[:l]
+					uri := path
+					if qs != "" {
+						uri += "?" + qs
+					}
+					// Redirect
+					if config.RedirectCode != 0 {
+						return c.Redirect(config.RedirectCode, uri)
+					}
+					// Forward
+					req.RequestURI = uri
+					url.Path = path
 				}
-				if config.RedirectCode != 0 {
-					return c.Redirect(config.RedirectCode, uri)
-				}
-				req.RequestURI = uri
-				url.Path = path
+				return next(c)
 			}
-			return next(c)
 		}
-	}
-}
+	},
+}.Reg()

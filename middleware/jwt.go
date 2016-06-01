@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lessgo/lessgo"
@@ -12,27 +13,28 @@ import (
 type (
 	// JWTConfig defines the config for JWT auth middleware.
 	JWTConfig struct {
-		// SigningKey is the key to validate token.
+		// Signing key to validate token.
 		// Required.
-		SigningKey string `json:"signing_key"`
+		SigningKey []byte `json:"signing_key"`
 
-		// SigningMethod is used to check token signing method.
-		// Optional, with default value as `HS256`.
+		// Signing method, used to check token signing method.
+		// Optional. Default value HS256.
 		SigningMethod string `json:"signing_method"`
 
-		// ContextKey is the key to be used for storing user information from the
-		// token into context.
-		// Optional, with default value as `user`.
+		// Context key to store user information from the token into context.
+		// Optional. Default value "user".
 		ContextKey string `json:"context_key"`
 
-		// Extractor is a function that extracts token from the request.
-		// Optional, with default values as `JWTFromHeader`.
-		Extractor JWTExtractor
+		// TokenLookup is a string in the form of "<source>:<name>" that is used
+		// to extract token from the request.
+		// Optional. Default value "header:Authorization".
+		// Possible values:
+		// - "header:<name>"
+		// - "query:<name>"
+		TokenLookup string `json:"token_lookup"`
 	}
 
-	// JWTExtractor defines a function that takes `lessgo.Context` and returns either
-	// a token or an error.
-	JWTExtractor func(*lessgo.Context) (string, error)
+	jwtExtractor func(*lessgo.Context) (string, error)
 )
 
 const (
@@ -49,16 +51,16 @@ var (
 	DefaultJWTConfig = JWTConfig{
 		SigningMethod: AlgorithmHS256,
 		ContextKey:    "user",
-		Extractor:     JWTFromHeader,
+		TokenLookup:   "header:" + lessgo.HeaderAuthorization,
 	}
 )
 
+// JWT returns a JSON Web Token (JWT) auth middleware.
+//
 // For valid token, it sets the user in context and calls next handler.
 // For invalid token, it sends "401 - Unauthorized" response.
 // For empty or invalid `Authorization` header, it sends "400 - Bad Request".
 //
-// See https://jwt.io/introduction
-// JWTWithConfig returns a JWT auth middleware from config.
 var JWTWithConfig = lessgo.ApiMiddleware{
 	Name:   "JWTWithConfig",
 	Desc:   `JWT基本的第三方授权中间件，使用前请先在源码配置处理函数。`,
@@ -66,7 +68,7 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 	Middleware: func(confObject interface{}) lessgo.MiddlewareFunc {
 		config := confObject.(JWTConfig)
 		// Defaults
-		if len(config.SigningKey) == 0 {
+		if config.SigningKey == nil {
 			panic("jwt middleware requires signing key")
 		}
 		if config.SigningMethod == "" {
@@ -75,13 +77,21 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 		if config.ContextKey == "" {
 			config.ContextKey = DefaultJWTConfig.ContextKey
 		}
-		if config.Extractor == nil {
-			config.Extractor = DefaultJWTConfig.Extractor
+		if config.TokenLookup == "" {
+			config.TokenLookup = DefaultJWTConfig.TokenLookup
+		}
+
+		// Initialize
+		parts := strings.Split(config.TokenLookup, ":")
+		extractor := jwtFromHeader(parts[1])
+		switch parts[0] {
+		case "query":
+			extractor = jwtFromQuery(parts[1])
 		}
 
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 			return func(c *lessgo.Context) error {
-				auth, err := config.Extractor(c)
+				auth, err := extractor(c)
 				if err != nil {
 					return lessgo.NewHTTPError(http.StatusBadRequest, err.Error())
 				}
@@ -90,7 +100,7 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 					if t.Method.Alg() != config.SigningMethod {
 						return nil, fmt.Errorf("unexpected jwt signing method=%v", t.Header["alg"])
 					}
-					return []byte(config.SigningKey), nil
+					return config.SigningKey, nil
 
 				})
 				if err == nil && token.Valid {
@@ -104,20 +114,22 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 	},
 }
 
-// JWTFromHeader is a `JWTExtractor` that extracts token from the `Authorization` request
-// header.
-func JWTFromHeader(c *lessgo.Context) (string, error) {
-	auth := c.Request().Header.Get(lessgo.HeaderAuthorization)
-	l := len(bearer)
-	if len(auth) > l+1 && auth[:l] == bearer {
-		return auth[l+1:], nil
+// jwtFromHeader returns a `jwtExtractor` that extracts token from the provided
+// request header.
+func jwtFromHeader(header string) jwtExtractor {
+	return func(c *lessgo.Context) (string, error) {
+		auth := c.Request().Header.Get(header)
+		l := len(bearer)
+		if len(auth) > l+1 && auth[:l] == bearer {
+			return auth[l+1:], nil
+		}
+		return "", errors.New("empty or invalid jwt in authorization header")
 	}
-	return "", errors.New("empty or invalid jwt in authorization header")
 }
 
-// JWTFromQuery returns a `JWTExtractor` that extracts token from the provided query
+// jwtFromQuery returns a `jwtExtractor` that extracts token from the provided query
 // parameter.
-func JWTFromQuery(param string) JWTExtractor {
+func jwtFromQuery(param string) jwtExtractor {
 	return func(c *lessgo.Context) (string, error) {
 		token := c.QueryParam(param)
 		if token == "" {
