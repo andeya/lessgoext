@@ -49,7 +49,8 @@ var dbServiceConfig = func() *config {
 	}
 }()
 
-func (this *config) LoadDBConfig(fname string) (err error) {
+func (this *config) LoadDBConfig() (err error) {
+	fname := DBCONFIG_FILE
 	iniconf, err := confpkg.NewConfig("ini", fname)
 	if err == nil {
 		os.Remove(fname)

@@ -24,7 +24,7 @@ func initDBService() (dbService *DBService) {
 		}
 	}()
 
-	err := dbServiceConfig.LoadDBConfig(DBCONFIG_FILE)
+	err := dbServiceConfig.LoadDBConfig()
 	if err != nil {
 		lessgo.Log.Error(err.Error())
 		return
