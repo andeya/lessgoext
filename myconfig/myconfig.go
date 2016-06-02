@@ -60,6 +60,8 @@ func Sync(structPtr interface{}, defaultSection ...string) (err error) {
 			readSingleConfig(k, v, iniconf)
 		}
 	}
+
+	// 写入配置（缺省项将用传入的结构体相应字段自动补全）
 	os.MkdirAll(filepath.Dir(fname), 0777)
 	f, err := os.Create(fname)
 	if err != nil {
