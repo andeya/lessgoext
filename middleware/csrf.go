@@ -132,7 +132,7 @@ var CSRFWithConfig = lessgo.ApiMiddleware{
 				if config.CookieDomain != "" {
 					cookie.Domain = config.CookieDomain
 				}
-				c.SetCookie(cookie)
+				c.Response().SetCookie(cookie)
 
 				switch req.Method {
 				case lessgo.GET, lessgo.HEAD, lessgo.OPTIONS, lessgo.TRACE:
@@ -159,7 +159,7 @@ var CSRFWithConfig = lessgo.ApiMiddleware{
 // provided request header.
 func csrfTokenFromHeader(header string) csrfTokenExtractor {
 	return func(c *lessgo.Context) (string, error) {
-		return c.Request().Header.Get(header), nil
+		return c.HeaderParam(header), nil
 	}
 }
 
@@ -167,7 +167,7 @@ func csrfTokenFromHeader(header string) csrfTokenExtractor {
 // provided form parameter.
 func csrfTokenFromForm(param string) csrfTokenExtractor {
 	return func(c *lessgo.Context) (string, error) {
-		token := c.FormValue(param)
+		token := c.FormParam(param)
 		if token == "" {
 			return "", errors.New("empty csrf token in form param")
 		}

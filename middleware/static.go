@@ -57,7 +57,7 @@ var Static = lessgo.ApiMiddleware{
 				fs := http.Dir(config.Root)
 				p := c.Request().URL.Path
 				if strings.Contains(c.Path(), "*") { // If serving from a group, e.g. `/static*`.
-					p = c.P(0)
+					p = c.PathParamByIndex(0)
 				}
 				file := path.Clean(p)
 				f, err := fs.Open(file)

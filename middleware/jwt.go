@@ -118,7 +118,7 @@ var JWTWithConfig = lessgo.ApiMiddleware{
 // request header.
 func jwtFromHeader(header string) jwtExtractor {
 	return func(c *lessgo.Context) (string, error) {
-		auth := c.Request().Header.Get(header)
+		auth := c.HeaderParam(header)
 		l := len(bearer)
 		if len(auth) > l+1 && auth[:l] == bearer {
 			return auth[l+1:], nil

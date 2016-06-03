@@ -56,7 +56,7 @@ var (
 			if c.Request().URL.Path == "/apidoc/" {
 				return c.Redirect(302, "/apidoc/index.html")
 			}
-			return c.File(path.Join(dstSwagger, c.P(0)))
+			return c.File(path.Join(dstSwagger, c.PathParamByIndex(0)))
 		},
 	}
 

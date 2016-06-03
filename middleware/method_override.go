@@ -58,7 +58,7 @@ var MethodOverride = lessgo.ApiMiddleware{
 // the request header.
 func MethodFromHeader(header string) MethodOverrideGetter {
 	return func(c *lessgo.Context) string {
-		return c.Request().Header.Get(header)
+		return c.HeaderParam(header)
 	}
 }
 
@@ -66,7 +66,7 @@ func MethodFromHeader(header string) MethodOverrideGetter {
 // form parameter.
 func MethodFromForm(param string) MethodOverrideGetter {
 	return func(c *lessgo.Context) string {
-		return c.FormValue(param)
+		return c.FormParam(param)
 	}
 }
 

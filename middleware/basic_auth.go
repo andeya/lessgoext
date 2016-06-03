@@ -34,7 +34,7 @@ var BasicAuth = lessgo.ApiMiddleware{
 		config := BasicAuthConfig{confObject.(BasicAuthValidator)}
 		return func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 			return func(c *lessgo.Context) error {
-				auth := c.Request().Header.Get(lessgo.HeaderAuthorization)
+				auth := c.HeaderParam(lessgo.HeaderAuthorization)
 				l := len(basic)
 
 				if len(auth) > l+1 && auth[:l] == basic {
