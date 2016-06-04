@@ -12,9 +12,10 @@ type hei struct {
 }
 
 type love struct {
-	Desc string
-	Deep int
-	m    bool
+	Desc  string
+	Deep  int
+	Array []string
+	m     bool
 }
 
 func TestSync(t *testing.T) {

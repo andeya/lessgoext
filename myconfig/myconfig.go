@@ -12,8 +12,14 @@ import (
 	confpkg "github.com/lessgo/lessgo/config"
 )
 
-// 快速创建自己简单的ini配置
-// 参数类型：支持两级嵌套、仅包含基础数据类型的结构体指针
+/* 从结构体快速创建自己简单的ini配置。
+ * 结构类型限制：
+ * 传入Sync()的结构体必须为指针类型；
+ * 内部支持最多嵌套一层子结构体；
+ * 字段类型仅支持基础数据类型如：string、int、int64、bool、float 和 []string，共6种类型；
+ * []string类型数据在配置项以英文分号 ";" 间隔，注意末尾不可有 ";"，否则认为该 ";" 后还有一个空字符串存在；
+ * 根据实际应用场景，除[]string类型数据外，其他类型的数据在缺省相应配置项时均自动写入默认值。
+ */
 func Sync(structPtr interface{}, defaultSection ...string) (err error) {
 	v := reflect.ValueOf(structPtr)
 	if v.Kind() != reflect.Ptr {
@@ -108,6 +114,13 @@ func readSingleConfig(section string, p interface{}, iniconf confpkg.Configer) {
 
 		case reflect.Bool:
 			pf.SetBool(iniconf.DefaultBool(fullname, pf.Bool()))
+
+		case reflect.Slice:
+			// var v []string
+			// for i, count := 0, pf.Len(); i < count; i++ {
+			// 	v = append(v, fmt.Sprint(pf.Index(i).Interface()))
+			// }
+			pf.Set(reflect.ValueOf(iniconf.DefaultStrings(fullname, nil)))
 		}
 	}
 }
@@ -132,6 +145,12 @@ func writeSingleConfig(section string, p interface{}, iniconf confpkg.Configer) 
 		switch pf.Kind() {
 		case reflect.String, reflect.Int, reflect.Int64, reflect.Bool:
 			iniconf.Set(fullname, fmt.Sprint(pf.Interface()))
+		case reflect.Slice:
+			var v = ";"
+			for i, count := 0, pf.Len(); i < count; i++ {
+				v += fmt.Sprint(pf.Index(i).Interface())
+			}
+			iniconf.Set(fullname, v[1:])
 		}
 	}
 }
