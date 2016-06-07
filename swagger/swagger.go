@@ -284,7 +284,10 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 func properties(obj interface{}) map[string]*Property {
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
-	if t.Kind() == reflect.Ptr {
+	for {
+		if t.Kind() != reflect.Ptr {
+			break
+		}
 		t = t.Elem()
 		v = v.Elem()
 	}
@@ -296,10 +299,16 @@ func properties(obj interface{}) map[string]*Property {
 			v = reflect.Value{}
 		}
 	}
-	if t.Kind() == reflect.Ptr {
+	for {
+		if t.Kind() != reflect.Ptr {
+			break
+		}
 		t = t.Elem()
 	}
-	if v.Kind() == reflect.Ptr {
+	for {
+		if v.Kind() != reflect.Ptr {
+			break
+		}
 		v = v.Elem()
 	}
 	if v == (reflect.Value{}) {
@@ -312,8 +321,14 @@ func properties(obj interface{}) map[string]*Property {
 		kvs := v.MapKeys()
 		for _, kv := range kvs {
 			val := v.MapIndex(kv)
-			if val.Kind() == reflect.Ptr {
+			for {
+				if val.Kind() != reflect.Ptr {
+					break
+				}
 				val = val.Elem()
+			}
+			if val == (reflect.Value{}) {
+				val = reflect.New(val.Type()).Elem()
 			}
 			p := &Property{
 				Type:    build(val.Type()),
@@ -332,7 +347,16 @@ func properties(obj interface{}) map[string]*Property {
 				Type:   build(field.Type),
 				Format: field.Type.Name(),
 			}
-			p.Default = v.Field(i).Interface()
+			fv := v.Field(i)
+			ft := field.Type
+			if fv.Kind() == reflect.Ptr {
+				fv = fv.Elem()
+				ft = ft.Elem()
+			}
+			if fv.Interface() == nil {
+				fv = reflect.New(ft).Elem()
+			}
+			p.Default = fv.Interface()
 			ps[field.Name] = p
 		}
 		return ps
