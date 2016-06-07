@@ -302,23 +302,25 @@ func properties(obj interface{}) map[string]*Property {
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
+	if v == (reflect.Value{}) {
+		v = reflect.New(t).Elem()
+	}
+
 	ps := map[string]*Property{}
 	switch t.Kind() {
 	case reflect.Map:
-		if v != (reflect.Value{}) {
-			kvs := v.MapKeys()
-			for _, kv := range kvs {
-				val := v.MapIndex(kv)
-				if val.Kind() == reflect.Ptr {
-					val = val.Elem()
-				}
-				p := &Property{
-					Type:    build(val.Type()),
-					Format:  val.Type().Name(),
-					Default: val.Interface(),
-				}
-				ps[kv.String()] = p
+		kvs := v.MapKeys()
+		for _, kv := range kvs {
+			val := v.MapIndex(kv)
+			if val.Kind() == reflect.Ptr {
+				val = val.Elem()
 			}
+			p := &Property{
+				Type:    build(val.Type()),
+				Format:  val.Type().Name(),
+				Default: val.Interface(),
+			}
+			ps[kv.String()] = p
 		}
 		return ps
 
@@ -330,9 +332,7 @@ func properties(obj interface{}) map[string]*Property {
 				Type:   build(field.Type),
 				Format: field.Type.Name(),
 			}
-			if v != (reflect.Value{}) {
-				p.Default = v.Field(i).Interface()
-			}
+			p.Default = v.Field(i).Interface()
 			ps[field.Name] = p
 		}
 		return ps
