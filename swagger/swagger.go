@@ -45,6 +45,8 @@ var (
 			rwlock.RUnlock()
 			if canSet {
 				resetApidoc(c.Request().Host)
+			} else {
+				apidoc.Host = c.Request().Host // 根据请求动态设置host，修复因首次访问为localhost时，其他ip无法使用的bug
 			}
 			return c.JSON(200, apidoc)
 		},
