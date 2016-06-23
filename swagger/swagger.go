@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -136,6 +137,7 @@ func resetApidoc(host string) {
 
 	for _, child := range virtRouter.Children {
 		if child.Type == lessgo.HANDLER {
+			// 添加API操作项
 			addpath(child, rootTag)
 			continue
 		}
@@ -146,6 +148,7 @@ func resetApidoc(host string) {
 		apidoc.Tags = append(apidoc.Tags, childTag)
 		for _, grandson := range child.Children {
 			if grandson.Type == lessgo.HANDLER {
+				// 添加API操作项
 				addpath(grandson, childTag)
 				continue
 			}
@@ -156,6 +159,7 @@ func resetApidoc(host string) {
 			apidoc.Tags = append(apidoc.Tags, grandsonTag)
 			for _, vr := range grandson.Progeny() {
 				if vr.Type == lessgo.HANDLER {
+					// 添加API操作项
 					addpath(vr, grandsonTag)
 					continue
 				}
@@ -164,10 +168,12 @@ func resetApidoc(host string) {
 	}
 }
 
+// 添加API操作项
 func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 	operas := map[string]*Opera{}
 	pid := createPath(vr)
-
+	Summary := summary(vr.Description())
+	Description := desc(vr)
 	for _, method := range vr.Methods() {
 		if method == lessgo.CONNECT || method == lessgo.TRACE {
 			continue
@@ -177,8 +183,8 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		}
 		o := &Opera{
 			Tags:        []string{tag.Name},
-			Summary:     summary(vr.Description()),
-			Description: desc(vr.Description()),
+			Summary:     Summary,
+			Description: Description,
 			OperationId: vr.Id,
 			Consumes:    CommonMIMETypes,
 			Produces:    CommonMIMETypes,
@@ -403,12 +409,34 @@ func tagDesc(desc string) string {
 	return strings.TrimSpace(desc)
 }
 
+// 操作摘要
 func summary(desc string) string {
 	return strings.TrimSpace(strings.Split(strings.TrimSpace(desc), "\n")[0])
 }
 
-func desc(desc string) string {
-	return "<pre>" + strings.TrimSpace(desc) + "</pre>"
+// 操作描述
+func desc(vr *lessgo.VirtRouter) string {
+	var desc = new(string)
+	middlewareDesc(desc, vr)
+	var desc2 string
+	var idx int
+	for i, s := range strings.Split(*desc, "\n\n[路由中间件 ") {
+		if i > 0 {
+			idx++
+			desc2 += "\n\n[路由中间件 " + strconv.Itoa(idx) + s
+		}
+	}
+	return "<pre>" + strings.TrimSpace(vr.Description()) + desc2 + "</pre>"
+}
+
+// 递归获取相关中间件描述
+func middlewareDesc(desc *string, vr *lessgo.VirtRouter) {
+	for _, m := range vr.Middlewares {
+		*desc = "\n\n[路由中间件 ] " + m.Name + ":\n" + m.GetApiMiddleware().Desc + *desc
+	}
+	if vr.Parent != nil {
+		middlewareDesc(desc, vr.Parent)
+	}
 }
 
 type FileInfo struct {
