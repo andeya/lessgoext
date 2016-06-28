@@ -426,7 +426,7 @@ func desc(vr *lessgo.VirtRouter) string {
 			desc2 += "\n\n[路由中间件 " + strconv.Itoa(idx) + s
 		}
 	}
-	return "<pre>" + strings.TrimSpace(vr.Description()) + desc2 + "</pre>"
+	return "<pre style=\"line-height:18px;\">" + strings.TrimSpace(vr.Description()) + desc2 + "</pre>"
 }
 
 // 递归获取相关中间件描述
