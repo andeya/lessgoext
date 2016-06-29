@@ -18,12 +18,10 @@ import (
 /**
  * DBService 数据库服务
  */
-type (
-	DBService struct {
-		Default *xorm.Engine
-		List    map[string]*xorm.Engine
-	}
-)
+type DBService struct {
+	Default *xorm.Engine            //默认数据库引擎
+	List    map[string]*xorm.Engine //数据库引擎列表
+}
 
 var dbService = initDBService()
 
@@ -47,6 +45,13 @@ func GetDB(name string) (*xorm.Engine, bool) {
  */
 func DBList() map[string]*xorm.Engine {
 	return dbService.List
+}
+
+/**
+ * 获取默认数据库连接字符串
+ */
+func DefaultConnstring() string {
+	return dbServiceConfig.DBList[dbServiceConfig.DefaultDB].Connstring
 }
 
 /**

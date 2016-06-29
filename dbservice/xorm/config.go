@@ -18,7 +18,7 @@ type (
 	DBConfig struct {
 		Name         string
 		Driver       string // Driver：mssql | odbc(mssql) | mysql | mymysql | postgres | sqlite3 | oci8 | goracle
-		ConnString   string
+		Connstring   string
 		MaxOpenConns int
 		MaxIdleConns int
 		TableFix     string // 表命名空间是前缀还是后缀：prefix | suffix
@@ -48,7 +48,7 @@ var dbServiceConfig = func() *config {
 			"lessgo": {
 				Name:         "lessgo",
 				Driver:       "sqlite3",
-				ConnString:   DATABASE_DIR + "/sqlite.db",
+				Connstring:   DATABASE_DIR + "/sqlite.db",
 				MaxOpenConns: 1,
 				MaxIdleConns: 1,
 				TableFix:     "prefix",
