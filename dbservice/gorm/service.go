@@ -11,8 +11,8 @@ import (
 )
 
 type DBService struct {
-	Default *gorm.DB
-	List    map[string]*gorm.DB
+	Default *gorm.DB            //默认数据库引擎
+	List    map[string]*gorm.DB //数据库引擎列表
 }
 
 var dbService = initDBService()
@@ -37,6 +37,13 @@ func GetDB(name string) (*gorm.DB, bool) {
  */
 func DBList() map[string]*gorm.DB {
 	return dbService.List
+}
+
+/**
+ * 获取默认数据库连接字符串
+ */
+func DefaultConnstring() string {
+	return dbServiceConfig.DBList[dbServiceConfig.DefaultDB].Connstring
 }
 
 /**

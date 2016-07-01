@@ -257,7 +257,7 @@ func mrkdir(p ...string) {
 func writetofile(content string, filepath ...string) {
 	filename := path.Join(filepath...)
 	fmt.Println(filename)
-	f, err := os.Create(filename)
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		panic(err)
 	}

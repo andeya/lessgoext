@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -45,6 +46,8 @@ var (
 			rwlock.RUnlock()
 			if canSet {
 				resetApidoc(c.Request().Host)
+			} else {
+				apidoc.Host = c.Request().Host // 根据请求动态设置host，修复因首次访问为localhost时，其他ip无法使用的bug
 			}
 			return c.JSON(200, apidoc)
 		},
@@ -134,6 +137,7 @@ func resetApidoc(host string) {
 
 	for _, child := range virtRouter.Children {
 		if child.Type == lessgo.HANDLER {
+			// 添加API操作项
 			addpath(child, rootTag)
 			continue
 		}
@@ -144,6 +148,7 @@ func resetApidoc(host string) {
 		apidoc.Tags = append(apidoc.Tags, childTag)
 		for _, grandson := range child.Children {
 			if grandson.Type == lessgo.HANDLER {
+				// 添加API操作项
 				addpath(grandson, childTag)
 				continue
 			}
@@ -154,6 +159,7 @@ func resetApidoc(host string) {
 			apidoc.Tags = append(apidoc.Tags, grandsonTag)
 			for _, vr := range grandson.Progeny() {
 				if vr.Type == lessgo.HANDLER {
+					// 添加API操作项
 					addpath(vr, grandsonTag)
 					continue
 				}
@@ -162,10 +168,12 @@ func resetApidoc(host string) {
 	}
 }
 
+// 添加API操作项
 func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 	operas := map[string]*Opera{}
 	pid := createPath(vr)
-
+	Summary := summary(vr.Description())
+	Description := desc(vr)
 	for _, method := range vr.Methods() {
 		if method == lessgo.CONNECT || method == lessgo.TRACE {
 			continue
@@ -175,14 +183,12 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		}
 		o := &Opera{
 			Tags:        []string{tag.Name},
-			Summary:     summary(vr.Description()),
-			Description: desc(vr.Description()),
+			Summary:     Summary,
+			Description: Description,
 			OperationId: vr.Id,
 			Consumes:    CommonMIMETypes,
 			Produces:    CommonMIMETypes,
-			Responses: map[string]*Resp{
-				"200": {Description: "Successful operation"},
-			},
+			Responses:   make(map[string]*Resp, 1),
 			// Security: []map[string][]string{},
 		}
 
@@ -196,26 +202,50 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 				// Items:       &Items{},
 				// Schema:      &Schema{},
 			}
-			typ := build(param.Format)
-			if typ == "object" {
-				ref := strings.Replace(vr.Path()[1:]+param.Name, "/", "__", -1)
-				p.Schema = &Schema{
-					Ref: "#/definitions/" + ref,
+			typ := build(param.Model)
+			switch p.In {
+			default:
+				switch typ {
+				case "file":
+					o.Consumes = []string{"multipart/form-data"}
+					p.Type = typ
+
+				case "array":
+					subtyp, first := slice(param.Model)
+					switch subtyp {
+					case "object":
+						ref := definitions(vr.Path(), p.Name, param.Model)
+						p.Schema = &Schema{
+							Type: typ,
+							Items: &Items{
+								Ref: "#/definitions/" + ref,
+							},
+						}
+
+					default:
+						p.Type = typ
+						p.Items = &Items{
+							Type:    subtyp,
+							Enum:    param.Model,
+							Default: first,
+						}
+						p.CollectionFormat = "multi"
+					}
+
+				case "object":
+					ref := definitions(vr.Path(), p.Name, param.Model)
+					p.Schema = &Schema{
+						Type: typ,
+						Ref:  "#/definitions/" + ref,
+					}
+
+				default:
+					p.Type = typ
+					p.Format = fmt.Sprintf("%T", param.Model)
+					p.Default = param.Model
 				}
-				def := &Definition{
-					Type: typ,
-					Xml:  &Xml{Name: ref},
-				}
-				def.Properties = properties(param.Format)
-				if apidoc.Definitions == nil {
-					apidoc.Definitions = map[string]*Definition{}
-				}
-				apidoc.Definitions[ref] = def
-			} else {
-				p.Type = typ
-				p.Format = fmt.Sprintf("%T", param.Format)
-				p.Default = param.Format
 			}
+
 			o.Parameters = append(o.Parameters, p)
 		}
 
@@ -223,6 +253,30 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		if strings.HasSuffix(pid, "/{static}") {
 			o.Parameters = append(o.Parameters, staticParam)
 		}
+
+		// 响应结果描述
+		var resp = new(Resp)
+		switch l := len(vr.HTTP200()); l {
+		case 0:
+			resp.Description = "successful operation"
+		case 1:
+			ref := definitions(vr.Path(), "http200", vr.HTTP200()[0])
+			resp.Schema = &Schema{
+				Ref:  "#/definitions/" + ref,
+				Type: "object",
+			}
+		default:
+			m := make(map[string]lessgo.Result, l)
+			for _, ret := range vr.HTTP200() {
+				m[fmt.Sprintf("Code == %v", ret.Code)] = ret
+			}
+			ref := definitions(vr.Path(), "http200", m)
+			resp.Schema = &Schema{
+				Ref:  "#/definitions/" + ref,
+				Type: "object",
+			}
+		}
+		o.Responses["200"] = resp
 
 		operas[strings.ToLower(method)] = o
 	}
@@ -236,38 +290,102 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 }
 
 func properties(obj interface{}) map[string]*Property {
+	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
-	if v.Kind() == reflect.Ptr {
+	for {
+		if t.Kind() != reflect.Ptr {
+			break
+		}
+		t = t.Elem()
 		v = v.Elem()
 	}
+	if t.Kind() == reflect.Slice {
+		t = t.Elem()
+		if v.Len() > 0 {
+			v = v.Index(0)
+		} else {
+			v = reflect.Value{}
+		}
+	}
+	for {
+		if t.Kind() != reflect.Ptr {
+			break
+		}
+		t = t.Elem()
+	}
+	for {
+		if v.Kind() != reflect.Ptr {
+			break
+		}
+		v = v.Elem()
+	}
+	if v == (reflect.Value{}) {
+		v = reflect.New(t).Elem()
+	}
+
 	ps := map[string]*Property{}
-	if v.Kind() == reflect.Map {
+	switch t.Kind() {
+	case reflect.Map:
 		kvs := v.MapKeys()
 		for _, kv := range kvs {
-			val := v.MapIndex(kv).Interface()
+			val := v.MapIndex(kv)
+			for {
+				if val.Kind() != reflect.Ptr {
+					break
+				}
+				val = val.Elem()
+			}
+			if val == (reflect.Value{}) {
+				val = reflect.New(val.Type()).Elem()
+			}
 			p := &Property{
-				Type:    build(val),
-				Format:  fmt.Sprintf("%T", val),
-				Default: val,
+				Type:    build(val.Type()),
+				Format:  val.Type().Name(),
+				Default: val.Interface(),
 			}
 			ps[kv.String()] = p
 		}
 		return ps
-	}
-	if v.Kind() == reflect.Struct {
-		num := v.NumField()
+
+	case reflect.Struct:
+		num := t.NumField()
 		for i := 0; i < num; i++ {
-			val := v.Field(i).Interface()
+			field := t.Field(i)
 			p := &Property{
-				Type:    build(val),
-				Format:  fmt.Sprintf("%T", val),
-				Default: val,
+				Type:   build(field.Type),
+				Format: field.Type.Name(),
 			}
-			ps[v.Type().Field(i).Name] = p
+			fv := v.Field(i)
+			ft := field.Type
+			if fv.Kind() == reflect.Ptr {
+				fv = fv.Elem()
+				ft = ft.Elem()
+			}
+			if fv.Interface() == nil {
+				fv = reflect.New(ft).Elem()
+			}
+			p.Default = fv.Interface()
+			ps[field.Name] = p
 		}
 		return ps
+
 	}
+
 	return nil
+}
+
+func definitions(path, pname string, format interface{}) (ref string) {
+	ref = strings.Replace(path[1:]+pname, "/", "__", -1)
+	def := &Definition{
+		Type: "object",
+		Xml:  &Xml{Name: ref},
+	}
+	def.Properties = properties(format)
+	if apidoc.Definitions == nil {
+		apidoc.Definitions = map[string]*Definition{}
+	}
+	apidoc.Definitions[ref] = def
+	return
 }
 
 func createPath(vr *lessgo.VirtRouter) string {
@@ -291,12 +409,34 @@ func tagDesc(desc string) string {
 	return strings.TrimSpace(desc)
 }
 
+// 操作摘要
 func summary(desc string) string {
 	return strings.TrimSpace(strings.Split(strings.TrimSpace(desc), "\n")[0])
 }
 
-func desc(desc string) string {
-	return "<pre>" + strings.TrimSpace(desc) + "</pre>"
+// 操作描述
+func desc(vr *lessgo.VirtRouter) string {
+	var desc = new(string)
+	middlewareDesc(desc, vr)
+	var desc2 string
+	var idx int
+	for i, s := range strings.Split(*desc, "\n\n[路由中间件 ") {
+		if i > 0 {
+			idx++
+			desc2 += "\n\n[路由中间件 " + strconv.Itoa(idx) + s
+		}
+	}
+	return "<pre style=\"line-height:18px;\">" + strings.TrimSpace(vr.Description()) + desc2 + "</pre>"
+}
+
+// 递归获取相关中间件描述
+func middlewareDesc(desc *string, vr *lessgo.VirtRouter) {
+	for _, m := range vr.Middlewares {
+		*desc = "\n\n[路由中间件 ] " + m.Name + ":\n" + m.GetApiMiddleware().Desc + *desc
+	}
+	if vr.Parent != nil {
+		middlewareDesc(desc, vr.Parent)
+	}
 }
 
 type FileInfo struct {
@@ -328,11 +468,38 @@ func copyFunc(srcHandle, dstHandle *os.File) (err error) {
 	return err
 }
 
-func build(value interface{}) string {
-	if value == nil {
-		return ""
+// 获取切片参数值的信息
+func slice(value interface{}) (subtyp string, first interface{}) {
+	subtyp = fmt.Sprintf("%T", value)
+	idx := strings.Index(subtyp, "]")
+	subtyp = subtyp[idx+1:]
+	if strings.HasPrefix(subtyp, "[]") {
+		subtyp = "array"
+	} else {
+		subtyp = mapping2[subtyp]
+		if len(subtyp) == 0 {
+			subtyp = "object"
+		}
 	}
 	rv := reflect.ValueOf(value)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
+	if rv.Len() > 0 {
+		first = rv.Index(0).Interface()
+	}
+	return
+}
+
+// 获取参数值类型
+func build(value interface{}) string {
+	if value == nil {
+		return "file"
+	}
+	rv, ok := value.(reflect.Type)
+	if !ok {
+		rv = reflect.TypeOf(value)
+	}
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
@@ -358,4 +525,21 @@ var mapping = map[reflect.Kind]string{
 	reflect.Slice:   "array",
 	reflect.Struct:  "object",
 	reflect.Map:     "object",
+}
+
+var mapping2 = map[string]string{
+	"bool":    "bool",
+	"int":     "integer",
+	"int8":    "integer",
+	"int16":   "integer",
+	"int32":   "integer",
+	"int64":   "integer",
+	"uint":    "integer",
+	"uint8":   "integer",
+	"uint16":  "integer",
+	"uint32":  "integer",
+	"uint64":  "integer",
+	"float32": "number",
+	"float64": "number",
+	"string":  "string",
 }

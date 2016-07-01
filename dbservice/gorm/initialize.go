@@ -29,7 +29,7 @@ func initDBService() (dbService *DBService) {
 	}
 
 	for _, conf := range dbServiceConfig.DBList {
-		engine, err := gorm.Open(conf.Driver, conf.ConnString)
+		engine, err := gorm.Open(conf.Driver, conf.Connstring)
 		if err != nil {
 			lessgo.Log.Error("%v\n", err)
 			continue
@@ -42,9 +42,9 @@ func initDBService() (dbService *DBService) {
 		engine.DB().SetMaxOpenConns(conf.MaxOpenConns)
 		engine.DB().SetMaxIdleConns(conf.MaxIdleConns)
 
-		if conf.Driver == "sqlite3" && !utils.FileExists(conf.ConnString) {
-			os.MkdirAll(filepath.Dir(conf.ConnString), 0777)
-			f, err := os.Create(conf.ConnString)
+		if conf.Driver == "sqlite3" && !utils.FileExists(conf.Connstring) {
+			os.MkdirAll(filepath.Dir(conf.Connstring), 0777)
+			f, err := os.Create(conf.Connstring)
 			if err != nil {
 				lessgo.Log.Error("%v", err)
 			} else {

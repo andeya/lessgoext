@@ -14,6 +14,7 @@ package swagger
  * 7、double:浮点型
  * 8、decimal:精确到比较高的浮点型
  * 9、ref:引用类型，即引用定义好的数据结构
+ * 10、file:文件
  *
  * 二、参数位置
  *    body：http请求body
@@ -85,8 +86,9 @@ type (
 		Default          interface{} `json:"default,omitempty"`
 	}
 	Items struct {
-		Type    string      `json:"type"` // "string"
-		Enum    []string    `json:"enum,omitempty"`
+		Ref     string      `json:"$ref,omitempty"`
+		Type    string      `json:"type"`           // "string"
+		Enum    interface{} `json:"enum,omitempty"` // slice
 		Default interface{} `json:"default,omitempty"`
 	}
 	Schema struct {
@@ -97,7 +99,8 @@ type (
 		AdditionalProperties map[string]string `json:"additionalProperties,omitempty"`
 	}
 	Resp struct {
-		Description string `json:"description"`
+		Schema      *Schema `json:"schema,omitempty"`
+		Description string  `json:"description,omitempty"`
 	}
 	Definition struct {
 		Type       string               `json:"type,omitempty"` // "object"
