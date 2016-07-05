@@ -3,7 +3,7 @@
 A high level concurrency downloader.
 
 </br>
-surfer是一款Go语言编写的高并发爬虫下载器，拥有surf与phantom两种下载内核。
+surfer是一款Go语言编写的高并发 web 下载器，拥有surf与phantom两种下载内核。
 
 </br>
 支持固定UserAgent自动保存cookie与随机大量UserAgent禁用cookie两种模式，高度模拟浏览器行为，可实现模拟登录等功能。
@@ -58,4 +58,4 @@ func main() {
 
 #### 开源协议
 
-Pholcus（幽灵蛛）项目采用商业应用友好的[Apache License v2](https://github.com/henrylee2cn/surfer/raw/master/LICENSE).发布
+surfer项目采用商业应用友好的[Apache License v2](https://github.com/henrylee2cn/surfer/raw/master/LICENSE).发布
