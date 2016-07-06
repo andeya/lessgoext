@@ -25,14 +25,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lessgo/lessgoext/surfer/agent"
+	"github.com/henrylee2cn/surfer/agent"
 )
 
 type Param struct {
 	method        string
 	url           *url.URL
 	proxy         *url.URL
-	contentType   string
 	body          io.Reader
 	header        http.Header
 	enableCookie  bool
@@ -57,12 +56,14 @@ func NewParam(req Request) (param *Param, err error) {
 		}
 	}
 
+	param.header = req.GetHeader()
+
 	switch method := strings.ToUpper(req.GetMethod()); method {
 	case "GET", "HEAD":
 		param.method = method
 	case "POST":
 		param.method = method
-		param.contentType = "application/x-www-form-urlencoded"
+		param.header.Add("Content-Type", "application/x-www-form-urlencoded")
 		param.body = strings.NewReader(req.GetPostData())
 	case "POST-M":
 		param.method = "POST"
@@ -78,34 +79,22 @@ func NewParam(req Request) (param *Param, err error) {
 		if err != nil {
 			return nil, err
 		}
-		param.contentType = writer.FormDataContentType()
+		param.header.Add("Content-Type", writer.FormDataContentType())
 		param.body = body
 
 	default:
 		param.method = "GET"
 	}
 
-	param.header = make(http.Header)
-
-	if param.contentType != "" {
-		param.header.Set("Content-Type", param.contentType)
-	}
-
-	for k, v := range req.GetHeader() {
-		for _, vv := range v {
-			param.header.Add(k, vv)
-		}
-	}
-
 	param.enableCookie = req.GetEnableCookie()
 
 	if len(param.header.Get("User-Agent")) == 0 {
 		if param.enableCookie {
-			param.header.Set("User-Agent", agent.UserAgents["common"][0])
+			param.header.Add("User-Agent", agent.UserAgents["common"][0])
 		} else {
 			l := len(agent.UserAgents["common"])
 			r := rand.New(rand.NewSource(time.Now().UnixNano()))
-			param.header.Set("User-Agent", agent.UserAgents["common"][r.Intn(l)])
+			param.header.Add("User-Agent", agent.UserAgents["common"][r.Intn(l)])
 		}
 	}
 
