@@ -20,7 +20,7 @@ type (
 	}
 
 	gzipResponseWriter struct {
-		*lessgo.Response
+		lessgo.Response
 		io.Writer
 	}
 )
@@ -68,7 +68,7 @@ var Gzip = lessgo.ApiMiddleware{
 						gw.Close()
 						pool.Put(gw)
 					}()
-					g := gzipResponseWriter{Response: res, Writer: gw}
+					g := &gzipResponseWriter{Response: *res, Writer: gw}
 					res.Header().Set(lessgo.HeaderContentEncoding, scheme)
 					res.SetWriter(g)
 				}
@@ -78,7 +78,7 @@ var Gzip = lessgo.ApiMiddleware{
 	},
 }.Reg()
 
-func (g gzipResponseWriter) Write(b []byte) (int, error) {
+func (g *gzipResponseWriter) Write(b []byte) (int, error) {
 	if g.Header().Get(lessgo.HeaderContentType) == "" {
 		g.Header().Set(lessgo.HeaderContentType, http.DetectContentType(b))
 	}
