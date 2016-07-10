@@ -20,26 +20,15 @@ func newILogger(channelLen int64, l int, filename string) *ILogger {
 	tl.SetLogFuncCallDepth(3)
 	tl.AddAdapter("console", "")
 	tl.AddAdapter("file", `{"filename":"`+LOG_FOLDER+filename+`.xorm.log"}`)
+	tl.SetLevel(log.ExchangeLevel(l))
 	return &ILogger{
 		BeeLogger: tl,
-		level:     level(core.LogLevel(l)),
+		level:     level(l),
 	}
 }
 
-func level(l core.LogLevel) core.LogLevel {
-	switch int(l) {
-	case log.DEBUG:
-		return core.LOG_DEBUG
-	case log.INFO:
-		return core.LOG_INFO
-	case log.WARN:
-		return core.LOG_WARNING
-	case log.ERROR:
-		return core.LOG_ERR
-	case log.OFF, log.FATAL:
-		return core.LOG_OFF
-	}
-	return core.LOG_UNKNOWN
+func level(l int) core.LogLevel {
+	return core.LogLevel(log.ExchangeLevel(l))
 }
 
 func (i *ILogger) Debug(v ...interface{}) {
@@ -80,7 +69,7 @@ func (i *ILogger) Level() core.LogLevel {
 }
 
 func (i *ILogger) SetLevel(l core.LogLevel) {
-	i.level = level(l)
+	i.level = level(int(l))
 	i.BeeLogger.SetLevel(int(i.level))
 }
 
