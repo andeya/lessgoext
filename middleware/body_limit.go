@@ -15,13 +15,13 @@ type (
 		// Maximum allowed size for a request body, it can be specified
 		// as `4x` or `4xB`, where x is one of the multiple from K, M, G, T or P.
 		Limit string `json:"limit"`
-		limit int64
+		limit uint64
 	}
 
 	limitedReader struct {
 		BodyLimitConfig
 		reader  io.Reader
-		read    int64
+		read    uint64
 		context *lessgo.Context
 	}
 )
@@ -55,7 +55,7 @@ Limit can be specified as '4x' or '4xB', where x is one of the multiple from K, 
 				req := c.Request()
 
 				// Based on content length
-				if req.ContentLength > config.limit {
+				if uint64(req.ContentLength) > config.limit {
 					return lessgo.ErrStatusRequestEntityTooLarge
 				}
 
@@ -73,7 +73,7 @@ Limit can be specified as '4x' or '4xB', where x is one of the multiple from K, 
 
 func (r *limitedReader) Read(b []byte) (n int, err error) {
 	n, err = r.reader.Read(b)
-	r.read += int64(n)
+	r.read += uint64(n)
 	if r.read > r.limit {
 		return n, lessgo.ErrStatusRequestEntityTooLarge
 	}
