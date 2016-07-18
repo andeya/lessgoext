@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	BitConv struct {
+	Bytes struct {
 	}
 )
 
@@ -26,20 +26,20 @@ var (
 	global  = New()
 )
 
-// New creates a BitConv instance.
-func New() *BitConv {
-	return &BitConv{}
+// New creates a Bytes instance.
+func New() *Bytes {
+	return &Bytes{}
 }
 
 // Format formats bytes integer to human readable string.
 // For example, 31323 bytes will return 30.59KB.
-func (*BitConv) Format(b int64) string {
+func (*Bytes) Format(b uint64) string {
 	multiple := ""
 	value := float64(b)
 
 	switch {
 	case b < KB:
-		return strconv.FormatInt(b, 10) + "B"
+		return strconv.FormatUint(b, 10) + "B"
 	case b < MB:
 		value /= KB
 		multiple = "KB"
@@ -65,14 +65,14 @@ func (*BitConv) Format(b int64) string {
 
 // Parse parses human readable bytes string to bytes integer.
 // For example, 6GB (6G is also valid) will return 6442450944.
-func (*BitConv) Parse(value string) (i int64, err error) {
+func (*Bytes) Parse(value string) (i uint64, err error) {
 	parts := pattern.FindStringSubmatch(value)
 	if len(parts) < 3 {
 		return 0, fmt.Errorf("error parsing value=%s", value)
 	}
 	bytesString := parts[1]
 	multiple := parts[2]
-	bytes, err := strconv.ParseInt(bytesString, 10, 64)
+	bytes, err := strconv.ParseUint(bytesString, 10, 64)
 	if err != nil {
 		return
 	}
@@ -95,12 +95,12 @@ func (*BitConv) Parse(value string) (i int64, err error) {
 	return
 }
 
-// Format wraps global BitConv's Format function.
-func Format(b int64) string {
+// Format wraps global Bytes's Format function.
+func Format(b uint64) string {
 	return global.Format(b)
 }
 
-// Parse wraps global BitConv's Parse function.
-func Parse(val string) (int64, error) {
+// Parse wraps global Bytes's Parse function.
+func Parse(val string) (uint64, error) {
 	return global.Parse(val)
 }
