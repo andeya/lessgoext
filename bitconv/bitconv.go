@@ -58,6 +58,9 @@ func (*Bytes) Format(b uint64) string {
 	case b < EB:
 		value /= PB
 		multiple = "PB"
+	default:
+		value /= EB
+		multiple = "EB"
 	}
 
 	return fmt.Sprintf("%.02f%s", value, multiple)
