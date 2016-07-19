@@ -1,21 +1,15 @@
 package swagger
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
+	"net/http"
 	"path"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgo/utils"
-	"github.com/lessgo/lessgoext/copyfiles"
 	"github.com/lessgo/lessgoext/middleware"
 )
 
@@ -29,7 +23,6 @@ var (
 	virtRouter *lessgo.VirtRouter
 	rwlock     sync.RWMutex
 	jsonUrl    = "/swagger.json"
-	dstSwagger = lessgo.SYS_VIEW_DIR + "/swagger"
 	scheme     = func() string {
 		if lessgo.Config.Listen.EnableHTTPS {
 			return "https"
@@ -56,10 +49,9 @@ var (
 		Desc:   "apidoc",
 		Method: "GET",
 		Handler: func(c *lessgo.Context) error {
-			if c.Request().URL.Path == "/apidoc/" {
-				return c.Redirect(302, "/apidoc/index.html")
-			}
-			return c.File(path.Join(dstSwagger, c.PathParamByIndex(0)))
+			http.StripPrefix("/apidoc/", http.FileServer(assetFS())).
+				ServeHTTP(c.Response(), c.Request())
+			return nil
 		},
 	}
 
@@ -92,11 +84,6 @@ func Reg(allowWAN bool, middlewares ...*lessgo.ApiMiddleware) {
 			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middlewares...),
 		)
 		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
-	}
-
-	// 拷贝swagger文件至当前目录下
-	if !utils.FileExists(dstSwagger) {
-		CopySwaggerFiles()
 	}
 }
 
@@ -437,35 +424,6 @@ func middlewareDesc(desc *string, vr *lessgo.VirtRouter) {
 	if vr.Parent != nil {
 		middlewareDesc(desc, vr.Parent)
 	}
-}
-
-type FileInfo struct {
-	RelPath string
-	Size    int64
-	IsDir   bool
-	Handle  *os.File
-}
-
-// 拷贝swagger中所有文件至dstSwagger下
-func CopySwaggerFiles() {
-	fp := filepath.Join(os.Getenv("GOPATH"), `/src/github.com/lessgo/lessgoext/swagger/swagger-ui`)
-	copyfiles.CopyFiles(fp, dstSwagger, "", copyFunc)
-}
-
-//复制文件操作函数
-func copyFunc(srcHandle, dstHandle *os.File) (err error) {
-	stat, _ := srcHandle.Stat()
-	if stat.Name() == "index.html" {
-		b, err := ioutil.ReadAll(srcHandle)
-		if err != nil {
-			return err
-		}
-		b = bytes.Replace(b, []byte("{{{JSON_URL}}}"), []byte(jsonUrl), -1)
-		_, err = io.Copy(dstHandle, bytes.NewBuffer(b))
-		return err
-	}
-	_, err = io.Copy(dstHandle, srcHandle)
-	return err
 }
 
 // 获取切片参数值的信息
