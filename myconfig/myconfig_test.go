@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-type hei struct {
+type TheOne struct {
 	Name string
 	Age  int
 	Love *love
@@ -19,7 +19,7 @@ type love struct {
 }
 
 func TestSync(t *testing.T) {
-	me := &hei{
+	me := &TheOne{
 		Name: "henry",
 		Age:  30,
 		Love: &love{
