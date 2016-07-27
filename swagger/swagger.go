@@ -102,7 +102,7 @@ func resetApidoc(host string) {
 	apidoc = &Swagger{
 		Version: SwaggerVersion,
 		Info: &Info{
-			Title:          lessgo.Config.AppName + " API",
+			Title:          strings.Title(lessgo.Config.AppName) + " API",
 			Description:    lessgo.Config.Info.Description,
 			ApiVersion:     lessgo.Config.Info.Version,
 			Contact:        &Contact{Email: lessgo.Config.Info.Email},
