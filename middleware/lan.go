@@ -25,7 +25,7 @@ var OnlyLANAccess = lessgo.ApiMiddleware{
 				bytes.HasPrefix(remoteAddress, lanPrefix_2) ||
 				bytes.HasPrefix(remoteAddress, lanPrefix_3) ||
 				bytes.HasPrefix(remoteAddress, lanPrefix_4) {
-				// return next(c)
+				return next(c)
 			}
 
 			s := `<html>
