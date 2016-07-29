@@ -27,7 +27,16 @@ var OnlyLANAccess = lessgo.ApiMiddleware{
 				bytes.HasPrefix(remoteAddress, lanPrefix_4) {
 				return next(c)
 			}
-			return lessgo.NewHTTPError(http.StatusForbidden, "Only allow LAN access: "+c.RealRemoteAddr())
+
+			s := `<html>
+<head><title>403 Forbidden</title></head>
+<body bgcolor="white">
+<center><h1>403 Forbidden</h1></center>
+<hr><center>Only allow LAN access, your ip is ` + c.RealRemoteAddr() + `.</center>
+</body>
+</html>
+`
+			return c.HTML(http.StatusForbidden, s)
 		}
 	},
 }.Reg()
