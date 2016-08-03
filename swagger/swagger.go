@@ -11,6 +11,7 @@ import (
 
 	"github.com/lessgo/lessgo"
 	"github.com/lessgo/lessgoext/middleware"
+	"github.com/lessgo/lessgoext/myconfig"
 )
 
 /*
@@ -69,21 +70,42 @@ var (
 
 // 注册"/apidoc"路由
 // 参数allowWAN表示是否允许外网访问
-func Reg(allowWAN bool, middlewares ...*lessgo.ApiMiddleware) {
+func Reg(onlyLANAccess bool) {
 	// 注册路由
-	if allowWAN {
+	if onlyLANAccess {
 		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
-			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middlewares...),
-		)
-		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc".`)
-	} else {
-		middlewares = append([]*lessgo.ApiMiddleware{middleware.OnlyLANAccess}, middlewares...)
-		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle, middlewares...),
-			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middlewares...),
+			lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccess),
+			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middleware.OnlyLANAccess),
 		)
 		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
+
+	} else {
+		// 被允许访问的ip前缀列表
+		type ApidocAllow struct {
+			IpPrefix []string
+		}
+		allowIPPrefixes := middleware.AllowIPPrefixes.Clone()
+		apidocAllowConfig := &ApidocAllow{
+			IpPrefix: allowIPPrefixes.Config.([]string),
+		}
+		err := myconfig.Sync(apidocAllowConfig)
+		if err != nil {
+			lessgo.Log.Error("%s", err.Error())
+			return
+		} else {
+			a := []string{}
+			for _, ipPrefix := range apidocAllowConfig.IpPrefix {
+				if len(ipPrefix) > 0 {
+					a = append(a, ipPrefix)
+				}
+			}
+			allowIPPrefixes.SetConfig(a)
+		}
+		lessgo.Root(
+			lessgo.Leaf(jsonUrl, swaggerHandle, allowIPPrefixes),
+			lessgo.Leaf("/apidoc/*filepath", apidocHandle, allowIPPrefixes),
+		)
+		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc".`)
 	}
 }
 
