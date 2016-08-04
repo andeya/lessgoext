@@ -1,7 +1,7 @@
 package swagger
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -71,14 +71,26 @@ var (
 
 // ip前缀过滤中间件
 var (
-	isOnlyLANAccess              bool
-	AllowIPPrefixesMiddleware    = middleware.AllowIPPrefixes.Clone()
-	setOnce                      sync.Once
-	setAllowIPPrefixesMiddleware = lessgo.ApiMiddleware{
-		Name: "setAllowIPPrefixesMiddleware",
-		Middleware: func(c *lessgo.Context) error {
-			setOnce.Do(setAllowIPPrefixes)
-			return nil
+	AllowIPPrefixes = []string{
+		"::",
+		"127.",
+		"192.168.",
+		"10.",
+	}
+	setAllowIPPrefixesOnce sync.Once
+	allowApidoc            = lessgo.ApiMiddleware{
+		Name: "allowApidoc",
+		Middleware: func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
+			return func(c *lessgo.Context) error {
+				setAllowIPPrefixesOnce.Do(setAllowIPPrefixes)
+				remoteAddress := c.RealRemoteAddr()
+				for i, count := 0, len(AllowIPPrefixes); i < count; i++ {
+					if strings.HasPrefix(remoteAddress, AllowIPPrefixes[i]) {
+						return next(c)
+					}
+				}
+				return c.Failure(http.StatusForbidden, errors.New(`Not allow your ip access: `+c.RealRemoteAddr()))
+			}
 		},
 	}.Reg()
 )
@@ -90,7 +102,7 @@ func setAllowIPPrefixes() {
 		IpPrefix []string
 	}
 	apidocAllowConfig := &ApidocAllow{
-		IpPrefix: AllowIPPrefixesMiddleware.Config.([]string),
+		IpPrefix: AllowIPPrefixes,
 	}
 	err := myconfig.Sync(apidocAllowConfig)
 	if err != nil {
@@ -98,61 +110,34 @@ func setAllowIPPrefixes() {
 		return
 	}
 
-	a := []string{}
+	AllowIPPrefixes = []string{}
 	for _, ipPrefix := range apidocAllowConfig.IpPrefix {
 		if len(ipPrefix) > 0 {
-			a = append(a, ipPrefix)
+			AllowIPPrefixes = append(AllowIPPrefixes, ipPrefix)
 		}
 	}
-
-	vr, ok := lessgo.GetVirtRouterByPath("/apidoc/*filepath")
-	if !ok {
-		return
-	}
-
-	m, _ := vr.GetMiddlewareConfig(AllowIPPrefixesMiddleware.Name)
-
-	b, _ := json.Marshal(a)
-	err = m.SetConfig(b)
-	if err != nil {
-		lessgo.Log.Error("%s", err.Error())
-	}
-
-	vr, ok = lessgo.GetVirtRouterByPath("/swagger.json")
-	if !ok {
-		return
-	}
-
-	m, _ = vr.GetMiddlewareConfig(AllowIPPrefixesMiddleware.Name)
-
-	b, _ = json.Marshal(a)
-	err = m.SetConfig(b)
-	if err != nil {
-		lessgo.Log.Error("%s", err.Error())
-	}
-
-	go lessgo.ReregisterRouter("From myconfig, read the IP Prefixes which are allowed access.")
 }
 
 // 注册"/apidoc"路由
-// 参数allowWAN表示是否允许外网访问
-func Reg(onlyLANAccess bool) {
-	// 注册路由
-	if onlyLANAccess {
+// @customAccess为true表示自定义允许访问的ip前缀
+// @customAccess为false表示只允许局域网访问
+func Reg(customAccess bool) {
+	// 自定义允许访问的ip前缀
+	if customAccess {
 		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccess),
-			lessgo.Leaf("/apidoc/*filepath", apidocHandle, middleware.OnlyLANAccess),
-		)
-		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
-
-	} else {
-
-		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle, setAllowIPPrefixesMiddleware, AllowIPPrefixesMiddleware),
-			lessgo.Leaf("/apidoc/*filepath", apidocHandle, setAllowIPPrefixesMiddleware, AllowIPPrefixesMiddleware),
+			lessgo.Leaf(jsonUrl, swaggerHandle, allowApidoc),
+			lessgo.Leaf("/apidoc/*filepath", apidocHandle, allowApidoc),
 		)
 		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc".`)
+		return
 	}
+
+	// 默认只允许局域网访问
+	lessgo.Root(
+		lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccess),
+		lessgo.Leaf("/apidoc/*filepath", apidocHandle, middleware.OnlyLANAccess),
+	)
+	lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
 }
 
 // 构建api文档Swagger对象

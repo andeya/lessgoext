@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 
 	"github.com/lessgo/lessgo"
@@ -28,16 +29,7 @@ var OnlyLANAccess = lessgo.ApiMiddleware{
 				return next(c)
 			}
 
-			s := `<html>
-<head><title>403 Forbidden</title></head>
-<body bgcolor="white">
-<center><h1>403 Forbidden</h1></center>
-<hr><center>lessgo/` + lessgo.VERSION + `</center>
-<br><center>Only allow LAN access, your ip is ` + c.RealRemoteAddr() + `.</center>
-</body>
-</html>
-`
-			return c.HTML(http.StatusForbidden, s)
+			return c.Failure(http.StatusForbidden, errors.New(`Only allow LAN access, but your ip is `+c.RealRemoteAddr()))
 		}
 	},
 }.Reg()

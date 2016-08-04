@@ -33,7 +33,7 @@ var AllowIPPrefixes = lessgo.ApiMiddleware{
 					}
 				}
 
-				return c.Failure(http.StatusForbidden, errors.New(`Only allow LAN access, your ip is `+c.RealRemoteAddr()+`.`))
+				return c.Failure(http.StatusForbidden, errors.New(`Not allow your ip access: `+c.RealRemoteAddr()))
 			}
 		}
 	},
