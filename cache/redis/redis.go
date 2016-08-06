@@ -37,7 +37,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"github.com/lessgo/lessgoext/cache"
+	"github.com/lessgo/lessgo/cache"
 )
 
 var (

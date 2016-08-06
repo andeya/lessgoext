@@ -10,7 +10,6 @@ import (
 
 	"github.com/lessgo/lessgo"
 	confpkg "github.com/lessgo/lessgo/config"
-	"github.com/lessgo/lessgo/utils"
 )
 
 /* 从结构体快速创建自己简单的ini配置。
@@ -36,7 +35,7 @@ func Sync(structPtr interface{}, defaultSection ...string) (err error) {
 		section = defaultSection[0]
 	}
 	t := v.Type()
-	fname := filepath.Join(lessgo.CONFIG_DIR, utils.SnakeString(t.Name())+".myconfig")
+	fname := strings.ToLower(filepath.Join(lessgo.CONFIG_DIR, t.Name()+".myconfig"))
 
 	// 遍历二级结构体
 	subStructPtrs := map[string]interface{}{}
@@ -117,6 +116,10 @@ func readSingleConfig(section string, p interface{}, iniconf confpkg.Configer) {
 			pf.SetBool(iniconf.DefaultBool(fullname, pf.Bool()))
 
 		case reflect.Slice:
+			// var v []string
+			// for i, count := 0, pf.Len(); i < count; i++ {
+			// 	v = append(v, fmt.Sprint(pf.Index(i).Interface()))
+			// }
 			pf.Set(reflect.ValueOf(iniconf.DefaultStrings(fullname, nil)))
 		}
 	}
@@ -143,13 +146,11 @@ func writeSingleConfig(section string, p interface{}, iniconf confpkg.Configer) 
 		case reflect.String, reflect.Int, reflect.Int64, reflect.Bool:
 			iniconf.Set(fullname, fmt.Sprint(pf.Interface()))
 		case reflect.Slice:
-			var v string
+			var v = ";"
 			for i, count := 0, pf.Len(); i < count; i++ {
-				v += ";" + fmt.Sprint(pf.Index(i).Interface())
+				v += fmt.Sprint(pf.Index(i).Interface())
 			}
-			if len(v) > 0 {
-				iniconf.Set(fullname, v[1:])
-			}
+			iniconf.Set(fullname, v[1:])
 		}
 	}
 }

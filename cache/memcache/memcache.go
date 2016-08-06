@@ -38,7 +38,7 @@ import (
 
 	"time"
 
-	"github.com/lessgo/lessgoext/cache"
+	"github.com/lessgo/lessgo/cache"
 )
 
 // Cache Memcache adapter.
