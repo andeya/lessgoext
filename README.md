@@ -202,29 +202,29 @@ func init() {
 │  └─plugin 公共js插件 (url: /static/plugin)
 ├─uploads 默认上传下载目录
 ├─router 源码路由配置
-│  ├─sysrouter.go 系统模块路由文件
-│  ├─bizrouter.go 业务模块路由文件
-├─syshandler 系统模块后端目录
+│  ├─sys_router.go 系统模块路由文件
+│  ├─biz_router.go 业务模块路由文件
+├─sys_handler 系统模块后端目录
 │  ├─xxx 子模块目录
 │  │  ├─example.go example操作
 │  │  └─... xxx的子模块目录
 │  └─... 其他子模块目录
-├─sysmodel 系统模块数据模型目录
-├─sysview 系统模块前端目录 (url: /sys)
-│  ├─xxx 与syshandler对应的子模块目录 (url: /sys/xxx)
+├─sys_model 系统模块数据模型目录
+├─sys_view 系统模块前端目录 (url: /sys)
+│  ├─xxx 与sys_handler对应的子模块目录 (url: /sys/xxx)
 │  │  ├─example.tpl 相应操作的模板文件
 │  │  ├─example2.html 无需绑定操作的静态html文件
 │  │  ├─xxx.css css文件(可有多个)
 │  │  ├─xxx.js js文件(可有多个)
 │  │  └─... xxx的子模块目录
-├─bizhandler 业务模块后端目录
+├─biz_handler 业务模块后端目录
 │  ├─xxx 子模块目录
 │  │  ├─example.go example操作
 │  │  └─... xxx的子模块目录
 │  └─... 其他子模块目录
-├─bizmodel 业务模块数据模型目录
-├─bizview 业务模块前端目录 (url: /biz)
-│  ├─xxx 与bizhandler对应的子模块目录 (url: /biz/xxx)
+├─biz_model 业务模块数据模型目录
+├─biz_view 业务模块前端目录 (url: /biz)
+│  ├─xxx 与biz_handler对应的子模块目录 (url: /biz/xxx)
 │  │  ├─example.tpl 相应操作的模板文件
 │  │  ├─example2.html 无需绑定操作的静态html文件
 │  │  ├─xxx.css css文件(可有多个)
