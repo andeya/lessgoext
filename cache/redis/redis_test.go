@@ -20,7 +20,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 
-	"github.com/lessgo/lessgo/cache"
+	"github.com/lessgo/lessgoext/cache"
 )
 
 func TestRedisCache(t *testing.T) {
