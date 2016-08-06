@@ -47,29 +47,29 @@ the following files/directories structure:
 │  └─plugin 公共js插件 (url: /static/plugin)
 ├─uploads 默认上传下载目录
 ├─router 源码路由配置
-│  ├─sysrouter.go 系统模块路由文件
-│  ├─bizrouter.go 业务模块路由文件
-├─syshandler 系统模块后端目录
+│  ├─sys_router.go 系统模块路由文件
+│  ├─biz_router.go 业务模块路由文件
+├─sys_handler 系统模块后端目录
 │  ├─xxx 子模块目录
 │  │  ├─example.go example操作
 │  │  └─... xxx的子模块目录
 │  └─... 其他子模块目录
-├─sysmodel 系统模块数据模型目录
-├─sysview 系统模块前端目录 (url: /sys)
-│  ├─xxx 与syshandler对应的子模块目录 (url: /sys/xxx)
+├─sys_model 系统模块数据模型目录
+├─sys_view 系统模块前端目录 (url: /sys)
+│  ├─xxx 与sys_handler对应的子模块目录 (url: /sys/xxx)
 │  │  ├─example.tpl 相应操作的模板文件
 │  │  ├─example2.html 无需绑定操作的静态html文件
 │  │  ├─xxx.css css文件(可有多个)
 │  │  ├─xxx.js js文件(可有多个)
 │  │  └─... xxx的子模块目录
-├─bizhandler 业务模块后端目录
+├─biz_handler 业务模块后端目录
 │  ├─xxx 子模块目录
 │  │  ├─example.go example操作
 │  │  └─... xxx的子模块目录
 │  └─... 其他子模块目录
-├─bizmodel 业务模块数据模型目录
-├─bizview 业务模块前端目录 (url: /biz)
-│  ├─xxx 与bizhandler对应的子模块目录 (url: /biz/xxx)
+├─biz_model 业务模块数据模型目录
+├─biz_view 业务模块前端目录 (url: /biz)
+│  ├─xxx 与biz_handler对应的子模块目录 (url: /biz/xxx)
 │  │  ├─example.tpl 相应操作的模板文件
 │  │  ├─example2.html 无需绑定操作的静态html文件
 │  │  ├─xxx.css css文件(可有多个)
@@ -156,19 +156,19 @@ func createApp(cmd *Command, args []string) int {
 	mrkdir(apppath, "static", "plugin")
 	mrkdir(apppath, "uploads")
 	mrkdir(apppath, "router")
-	mrkdir(apppath, "syshandler")
-	mrkdir(apppath, "syshandler", "admin")
-	mrkdir(apppath, "syshandler", "admin", "login")
-	mrkdir(apppath, "sysmodel")
-	mrkdir(apppath, "sysmodel", "admin")
-	mrkdir(apppath, "sysview")
-	mrkdir(apppath, "sysview", "admin")
-	mrkdir(apppath, "sysview", "admin", "login")
-	mrkdir(apppath, "bizhandler")
-	mrkdir(apppath, "bizhandler", "home")
-	mrkdir(apppath, "bizmodel")
-	mrkdir(apppath, "bizview")
-	mrkdir(apppath, "bizview", "home")
+	mrkdir(apppath, "sys_handler")
+	mrkdir(apppath, "sys_handler", "admin")
+	mrkdir(apppath, "sys_handler", "admin", "login")
+	mrkdir(apppath, "sys_model")
+	mrkdir(apppath, "sys_model", "admin")
+	mrkdir(apppath, "sys_view")
+	mrkdir(apppath, "sys_view", "admin")
+	mrkdir(apppath, "sys_view", "admin", "login")
+	mrkdir(apppath, "biz_handler")
+	mrkdir(apppath, "biz_handler", "home")
+	mrkdir(apppath, "biz_model")
+	mrkdir(apppath, "biz_view")
+	mrkdir(apppath, "biz_view", "home")
 
 	writetofile(
 		createContent(middlewareTest),
@@ -188,56 +188,56 @@ func createApp(cmd *Command, args []string) int {
 	)
 	writetofile(
 		createContent(sysRouter),
-		apppath, "router", "sysrouter.go",
+		apppath, "router", "sys_router.go",
 	)
 	writetofile(
 		createContent(sysRouter),
-		apppath, "router", "sysrouter.go",
+		apppath, "router", "sys_router.go",
 	)
 	writetofile(
 		createContent(bizRouter),
-		apppath, "router", "bizrouter.go",
+		apppath, "router", "biz_router.go",
 	)
 	writetofile(
 		createContent(adminIndex),
-		apppath, "syshandler", "admin", "index.go",
+		apppath, "sys_handler", "admin", "index.go",
 	)
 	writetofile(
 		createContent(adminLoginIndex),
-		apppath, "syshandler", "admin", "login", "index.go",
+		apppath, "sys_handler", "admin", "login", "index.go",
 	)
 	writetofile(
 		createContent(adminLoginIndexModel),
-		apppath, "sysmodel", "admin", "login.go",
+		apppath, "sys_model", "admin", "login.go",
 	)
 	writetofile(
 		createContent(adminLoginIndexTpl),
-		apppath, "sysview", "admin", "login", "index.tpl",
+		apppath, "sys_view", "admin", "login", "index.tpl",
 	)
 
 	writetofile(
 		createContent(homeIndex),
-		apppath, "bizhandler", "home", "index.go",
+		apppath, "biz_handler", "home", "index.go",
 	)
 	writetofile(
 		createContent(homeSocketHandle),
-		apppath, "bizhandler", "home", "websocket.go",
+		apppath, "biz_handler", "home", "websocket.go",
 	)
 	writetofile(
 		homeIndexTpl,
-		apppath, "bizview", "home", "index.tpl",
+		apppath, "biz_view", "home", "index.tpl",
 	)
 	writetofile(
 		WebsocketJs,
-		apppath, "bizview", "home", "websocket.js",
+		apppath, "biz_view", "home", "websocket.js",
 	)
 	writetofile(
 		githubJs,
-		apppath, "bizview", "home", "jquery.githubRepoWidget2.js",
+		apppath, "biz_view", "home", "jquery.githubRepoWidget2.js",
 	)
 	writetofile(
 		homeIndexCss,
-		apppath, "bizview", "home", "index.css",
+		apppath, "biz_view", "home", "index.css",
 	)
 	writetofile(
 		createContent(maingo),
@@ -304,8 +304,8 @@ var sysRouter = `package router
 import (
     "github.com/lessgo/lessgo"
 
-    "[[[importPrefix]]]/syshandler/admin"
-    "[[[importPrefix]]]/syshandler/admin/login"
+    "[[[importPrefix]]]/sys_handler/admin"
+    "[[[importPrefix]]]/sys_handler/admin/login"
 )
 
 func init() {
@@ -346,7 +346,7 @@ var adminLoginIndex = `package login
 import (
     . "github.com/lessgo/lessgo"
 
-    "[[[importPrefix]]]/sysmodel/admin"
+    "[[[importPrefix]]]/sys_model/admin"
 )
 
 var Index = ApiHandler{
@@ -380,7 +380,7 @@ var Index = ApiHandler{
         c.Log().Info("formData密码: %#v", c.FormParam("password"))
 
         return c.Render(200,
-            "sysview/admin/login/index.tpl",
+            "sys_view/admin/login/index.tpl",
             map[string]interface{}{
                 "name":       c.FormParam("user"),
                 "password":   c.FormParam("password"),
@@ -425,7 +425,7 @@ var bizRouter = `package router
 import (
     "github.com/lessgo/lessgo"
 
-    "[[[importPrefix]]]/bizhandler/home"
+    "[[[importPrefix]]]/biz_handler/home"
     "[[[importPrefix]]]/middleware"
 )
 
@@ -451,7 +451,7 @@ var Index = lessgo.ApiHandler{
     Handler: func(c *lessgo.Context) error {
         return c.Render(
             200,
-            "bizview/home/index.tpl",
+            "biz_view/home/index.tpl",
             map[string]interface{}{
                 "title":   lessgo.NAME,
                 "version": lessgo.VERSION,
@@ -500,10 +500,14 @@ import (
 )
 
 func main() {
-    // 开启自动api文档，false表示仅允许内网访问
+    // 开启自动api文档
+    // 参数为true表示自定义允许访问的ip前缀
+    // 参数为false表示只允许局域网访问
     swagger.Reg(false)
+
     // 指定根目录URL
     lessgo.SetHome("/home")
+    
     // 开启网络服务
     lessgo.Run()
 }
