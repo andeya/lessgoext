@@ -9,7 +9,7 @@ import (
 
 	"github.com/ssdb/gossdb/ssdb"
 
-	"github.com/lessgo/lessgo/cache"
+	"github.com/lessgo/lessgoext/cache"
 )
 
 // Cache SSDB adapter
