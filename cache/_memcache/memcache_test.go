@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lessgo/lessgo/cache"
+	"github.com/lessgo/lessgoext/cache"
 )
 
 func TestMemcacheCache(t *testing.T) {
