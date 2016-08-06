@@ -191,10 +191,6 @@ func createApp(cmd *Command, args []string) int {
 		apppath, "router", "sys_router.go",
 	)
 	writetofile(
-		createContent(sysRouter),
-		apppath, "router", "sys_router.go",
-	)
-	writetofile(
 		createContent(bizRouter),
 		apppath, "router", "biz_router.go",
 	)
