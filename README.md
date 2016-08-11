@@ -39,11 +39,13 @@ Lessgo是一款Go语言开发的简单、稳定、高效、灵活的 web开发�
 
 ```sh
 go get -u github.com/lessgo/lessgo
+go get -u github.com/lessgo/less
 go get -u github.com/lessgo/lessgoext/...
 ```
 
 ## 框架构成
 - 核心框架：[lessgo](https://github.com/lessgo/lessgo)
+- 框架部署工具：[less](https://github.com/lessgo/less)
 - 框架扩展：[lessgoext](https://github.com/lessgo/lessgoext)
 - 项目Demo：[demo](https://github.com/lessgo/demo)
 - 框架文档  [document](https://github.com/lessgo/doc)
