@@ -44,7 +44,7 @@ var dbServiceConfig = func() *config {
 				MaxOpenConns: 1,
 				MaxIdleConns: 1,
 				ColumnSnake:  true,
-				StructTag:    "",
+				StructTag:    "db",
 			},
 		},
 	}

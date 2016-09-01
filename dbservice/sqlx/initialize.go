@@ -45,9 +45,6 @@ func initDBService() (dbService *DBService) {
 		if conf.ColumnSnake {
 			strFunc = utils.SnakeString
 		}
-		if conf.StructTag == "" {
-			conf.StructTag = "db"
-		}
 
 		// Create a new mapper which will use the struct field tag "json" instead of "db"
 		db.Mapper = reflectx.NewMapperFunc(conf.StructTag, strFunc)
