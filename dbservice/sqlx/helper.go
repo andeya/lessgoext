@@ -61,4 +61,9 @@ type DBTX interface {
 	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	Rebind(query string) string
 	Select(dest interface{}, query string, args ...interface{}) error
+
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Prepare(query string) (*sql.Stmt, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
 }
