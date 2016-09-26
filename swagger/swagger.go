@@ -254,7 +254,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 					subtyp, first := slice(param.Model)
 					switch subtyp {
 					case "object":
-						ref := definitions(vr.Path(), p.Name, param.Model)
+						ref := definitions(vr.Path(), p.Name, method, param.Model)
 						p.Schema = &Schema{
 							Type: typ,
 							Items: &Items{
@@ -273,7 +273,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 					}
 
 				case "object":
-					ref := definitions(vr.Path(), p.Name, param.Model)
+					ref := definitions(vr.Path(), p.Name, method, param.Model)
 					p.Schema = &Schema{
 						Type: typ,
 						Ref:  "#/definitions/" + ref,
@@ -300,7 +300,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 		case 0:
 			resp.Description = "successful operation"
 		case 1:
-			ref := definitions(vr.Path(), "http200", vr.HTTP200()[0])
+			ref := definitions(vr.Path(), "http200", method, vr.HTTP200()[0])
 			resp.Schema = &Schema{
 				Ref:  "#/definitions/" + ref,
 				Type: "object",
@@ -310,7 +310,7 @@ func addpath(vr *lessgo.VirtRouter, tag *Tag) {
 			for _, ret := range vr.HTTP200() {
 				m[fmt.Sprintf("Code == %v", ret.Code)] = ret
 			}
-			ref := definitions(vr.Path(), "http200", m)
+			ref := definitions(vr.Path(), "http200", method, m)
 			resp.Schema = &Schema{
 				Ref:  "#/definitions/" + ref,
 				Type: "object",
@@ -414,8 +414,8 @@ func properties(obj interface{}) map[string]*Property {
 	return nil
 }
 
-func definitions(path, pname string, format interface{}) (ref string) {
-	ref = strings.Replace(path[1:]+pname, "/", "__", -1)
+func definitions(upath, pname, method string, format interface{}) (ref string) {
+	ref = strings.Replace(path.Join(upath[1:], pname, method), "/", "@", -1)
 	def := &Definition{
 		Type: "object",
 		Xml:  &Xml{Name: ref},
