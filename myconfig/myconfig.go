@@ -36,7 +36,9 @@ func Sync(structPtr interface{}, defaultSection ...string) (err error) {
 		section = defaultSection[0]
 	}
 	t := v.Type()
-	fname := filepath.Join(lessgo.CONFIG_DIR, utils.SnakeString(t.Name())+".myconfig")
+	fname := strings.TrimSuffix(t.Name(), "Config")
+	fname = utils.SnakeString(fname) + ".myconfig"
+	fname = filepath.Join(lessgo.CONFIG_DIR, fname)
 
 	// 遍历二级结构体
 	subStructPtrs := map[string]interface{}{}
