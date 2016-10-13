@@ -471,7 +471,8 @@ func desc(vr *lessgo.VirtRouter) string {
 
 // 递归获取相关中间件描述
 func middlewareDesc(desc *string, vr *lessgo.VirtRouter) {
-	for _, m := range vr.Middlewares {
+	for i := len(vr.Middlewares) - 1; i >= 0; i-- {
+		m := vr.Middlewares[i]
 		*desc = "\n\n[路由中间件 ] " + m.Name + ":\n" + m.GetApiMiddleware().Desc + *desc
 	}
 	if vr.Parent != nil {
