@@ -22,24 +22,24 @@ import (
 /**
  * 注册"/apidoc"路由
  * 配置文件config/apidoc_allow.myconfig说明
- * 参数"checkrealip=true"，表示以真实ip为准进行访问过滤拦截
- * 参数"ipprefix="，为空表示不允许任何ip访问
- * 参数"ipprefix=;"，末尾为分号表示允许任意ip访问
- * 参数"ipprefix=192;202"，表示仅允许以192或202开头的ip访问
+ * 参数"checkrealip=true"，表示以真实ip为准进行过滤访问
+ * 参数"freeaccess=true"，表示允许任意ip访问
+ * 参数"freeaccess=false ipprefix="，为空表示不允许任何ip访问
+ * 参数"freeaccess=false ipprefix=192;202"，表示仅允许以192或202开头的ip访问
  */
 func Reg() {
 	lessgo.Root(
 		lessgo.Leaf(jsonUrl, swaggerHandle, allowApidoc),
 		lessgo.Leaf("/apidoc/*filepath", apidocHandle, allowApidoc),
 	)
-	if len(apidocConfig.IpPrefix) == 0 {
-		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [not allow any ip access]`)
-	} else if apidocConfig.unlimited {
-		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [any ip can access]`)
+	if apidocConfig.FreeAccess {
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [free access]`)
+	} else if len(apidocConfig.IpPrefix) == 0 {
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [no access]`)
 	} else if apidocConfig.CheckRealIp {
 		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [check real ip for filter]`)
 	} else {
-		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [not check real ip for filter]`)
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [check direct ip for filter]`)
 	}
 }
 
@@ -96,21 +96,27 @@ var (
 		Name: "allowApidoc",
 		Middleware: func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 			return func(c *lessgo.Context) error {
-				if apidocConfig.unlimited {
+				if apidocConfig.FreeAccess {
 					return next(c)
 				}
+
+				if len(apidocConfig.IpPrefix) == 0 {
+					return c.Failure(http.StatusForbidden, errors.New(`no access`))
+				}
+
 				var remoteAddress string
 				if apidocConfig.CheckRealIp {
 					remoteAddress = c.RealRemoteAddr()
 				} else {
 					remoteAddress = c.Request().RemoteAddr
 				}
-				for i, count := 0, len(apidocConfig.IpPrefix); i < count; i++ {
-					if strings.HasPrefix(remoteAddress, apidocConfig.IpPrefix[i]) {
+				for _, ipPrefix := range apidocConfig.IpPrefix {
+					if strings.HasPrefix(remoteAddress, ipPrefix) {
 						return next(c)
 					}
 				}
-				return c.Failure(http.StatusForbidden, errors.New(`Not allow your ip access: `+remoteAddress))
+
+				return c.Failure(http.StatusForbidden, errors.New(`not allow to access: `+remoteAddress))
 			}
 		},
 	}.Reg()
@@ -119,13 +125,14 @@ var (
 // 配置被允许访问的ip前缀规则
 type ApidocAllow struct {
 	CheckRealIp bool //是否检查真实IP
-	unlimited   bool
+	FreeAccess  bool //允许任意IP访问
 	IpPrefix    []string
 }
 
 var apidocConfig = func() *ApidocAllow {
 	conf := &ApidocAllow{
 		CheckRealIp: false,
+		FreeAccess:  false,
 		IpPrefix: []string{
 			"[:",
 			"::",
@@ -140,11 +147,15 @@ var apidocConfig = func() *ApidocAllow {
 		return conf
 	}
 
+	ipPrefixMap := map[string]bool{}
 	for _, ipPrefix := range conf.IpPrefix {
-		if len(ipPrefix) == 0 {
-			conf.unlimited = true
-			break
+		if len(ipPrefix) > 0 {
+			ipPrefixMap[ipPrefix] = true
 		}
+	}
+	conf.IpPrefix = conf.IpPrefix[:0]
+	for ipPrefix := range ipPrefixMap {
+		conf.IpPrefix = append(conf.IpPrefix, ipPrefix)
 	}
 
 	return conf
