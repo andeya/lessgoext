@@ -151,6 +151,8 @@ func writeSingleConfig(section string, p interface{}, iniconf confpkg.Configer) 
 			}
 			if len(v) > 0 {
 				iniconf.Set(fullname, v[1:])
+			} else {
+				iniconf.Set(fullname, v)
 			}
 		}
 	}

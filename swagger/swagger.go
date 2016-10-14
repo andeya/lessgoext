@@ -11,7 +11,6 @@ import (
 	"sync"
 
 	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgoext/middleware"
 	"github.com/lessgo/lessgoext/myconfig"
 )
 
@@ -19,6 +18,30 @@ import (
  * API自动化文档
  * 仅限局域网访问
  */
+
+/**
+ * 注册"/apidoc"路由
+ * 配置文件config/apidoc_allow.myconfig说明
+ * 参数"checkrealip=true"，表示以真实ip为准进行访问过滤拦截
+ * 参数"ipprefix="，为空表示不允许任何ip访问
+ * 参数"ipprefix=;"，末尾为分号表示允许任意ip访问
+ * 参数"ipprefix=192;202"，表示仅允许以192或202开头的ip访问
+ */
+func Reg() {
+	lessgo.Root(
+		lessgo.Leaf(jsonUrl, swaggerHandle, allowApidoc),
+		lessgo.Leaf("/apidoc/*filepath", apidocHandle, allowApidoc),
+	)
+	if len(apidocConfig.IpPrefix) == 0 {
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [not allow any ip access]`)
+	} else if apidocConfig.unlimited {
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [any ip can access]`)
+	} else if apidocConfig.CheckRealIp {
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [check real ip for filter]`)
+	} else {
+		lessgo.Log.Sys(`Swagger API's URL path is '/apidoc' [not check real ip for filter]`)
+	}
+}
 
 var (
 	apidoc     *Swagger
@@ -67,78 +90,65 @@ var (
 		Format:      fmt.Sprintf("%T", "*"),
 		Default:     "",
 	}
-)
 
-// ip前缀过滤中间件
-var (
-	AllowIPPrefixes = []string{
-		"::",
-		"127.",
-		"192.168.",
-		"10.",
-	}
-	setAllowIPPrefixesOnce sync.Once
-	allowApidoc            = lessgo.ApiMiddleware{
+	// 拦截IP前缀的中间件
+	allowApidoc = lessgo.ApiMiddleware{
 		Name: "allowApidoc",
 		Middleware: func(next lessgo.HandlerFunc) lessgo.HandlerFunc {
 			return func(c *lessgo.Context) error {
-				setAllowIPPrefixesOnce.Do(setAllowIPPrefixes)
-				remoteAddress := c.RealRemoteAddr()
-				for i, count := 0, len(AllowIPPrefixes); i < count; i++ {
-					if strings.HasPrefix(remoteAddress, AllowIPPrefixes[i]) {
+				if apidocConfig.unlimited {
+					return next(c)
+				}
+				var remoteAddress string
+				if apidocConfig.CheckRealIp {
+					remoteAddress = c.RealRemoteAddr()
+				} else {
+					remoteAddress = c.Request().RemoteAddr
+				}
+				for i, count := 0, len(apidocConfig.IpPrefix); i < count; i++ {
+					if strings.HasPrefix(remoteAddress, apidocConfig.IpPrefix[i]) {
 						return next(c)
 					}
 				}
-				return c.Failure(http.StatusForbidden, errors.New(`Not allow your ip access: `+c.RealRemoteAddr()))
+				return c.Failure(http.StatusForbidden, errors.New(`Not allow your ip access: `+remoteAddress))
 			}
 		},
 	}.Reg()
 )
 
-// 设置ip前缀列表
-func setAllowIPPrefixes() {
-	// 被允许访问的ip前缀列表
-	type ApidocAllow struct {
-		IpPrefix []string
+// 配置被允许访问的ip前缀规则
+type ApidocAllow struct {
+	CheckRealIp bool //是否检查真实IP
+	unlimited   bool
+	IpPrefix    []string
+}
+
+var apidocConfig = func() *ApidocAllow {
+	conf := &ApidocAllow{
+		CheckRealIp: false,
+		IpPrefix: []string{
+			"[:",
+			"::",
+			"127.",
+			"192.168.",
+			"10.",
+		},
 	}
-	apidocAllowConfig := &ApidocAllow{
-		IpPrefix: AllowIPPrefixes,
-	}
-	err := myconfig.Sync(apidocAllowConfig)
+	err := myconfig.Sync(conf)
 	if err != nil {
 		lessgo.Log.Error("%s", err.Error())
-		return
+		return conf
 	}
 
-	AllowIPPrefixes = []string{}
-	for _, ipPrefix := range apidocAllowConfig.IpPrefix {
-		if len(ipPrefix) > 0 {
-			AllowIPPrefixes = append(AllowIPPrefixes, ipPrefix)
+	for _, ipPrefix := range conf.IpPrefix {
+		if len(ipPrefix) == 0 {
+			conf.unlimited = true
+			break
 		}
 	}
-}
 
-// 注册"/apidoc"路由
-// @customAccess为true表示自定义允许访问的ip前缀
-// @customAccess为false表示只允许局域网访问
-func Reg(customAccess bool) {
-	// 自定义允许访问的ip前缀
-	if customAccess {
-		lessgo.Root(
-			lessgo.Leaf(jsonUrl, swaggerHandle, allowApidoc),
-			lessgo.Leaf("/apidoc/*filepath", apidocHandle, allowApidoc),
-		)
-		lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc".`)
-		return
-	}
-
-	// 默认只允许局域网访问
-	lessgo.Root(
-		lessgo.Leaf(jsonUrl, swaggerHandle, middleware.OnlyLANAccess),
-		lessgo.Leaf("/apidoc/*filepath", apidocHandle, middleware.OnlyLANAccess),
-	)
-	lessgo.Log.Sys(`Swagger API doc can be accessed from "/apidoc", but only allows LAN.`)
-}
+	return conf
+}()
 
 // 构建api文档Swagger对象
 func resetApidoc(host string) {
