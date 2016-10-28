@@ -49,7 +49,7 @@ var (
 	rwlock     sync.RWMutex
 	jsonUrl    = "/swagger.json"
 	scheme     = func() string {
-		if lessgo.Config.Listen.EnableHTTPS {
+		if lessgo.Config.Listen.EnableTLS {
 			return "https"
 		} else {
 			return "http"
