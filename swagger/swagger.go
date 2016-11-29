@@ -44,17 +44,10 @@ func Reg() {
 }
 
 var (
-	apidoc     *Swagger
-	virtRouter *lessgo.VirtRouter
-	rwlock     sync.RWMutex
-	jsonUrl    = "/swagger.json"
-	scheme     = func() string {
-		if lessgo.Config.Listen.EnableTLS {
-			return "https"
-		} else {
-			return "http"
-		}
-	}()
+	apidoc        *Swagger
+	virtRouter    *lessgo.VirtRouter
+	rwlock        sync.RWMutex
+	jsonUrl       = "/swagger.json"
 	swaggerHandle = &lessgo.ApiHandler{
 		Desc:   "swagger",
 		Method: "GET",
@@ -67,6 +60,7 @@ var (
 			} else {
 				apidoc.Host = c.Request().Host // 根据请求动态设置host，修复因首次访问为localhost时，其他ip无法使用的bug
 			}
+			apidoc.Schemes = []string{getScheme(c)}
 			return c.JSON(200, apidoc)
 		},
 	}
@@ -189,7 +183,7 @@ func resetApidoc(host string) {
 		Host:     host,
 		BasePath: "/",
 		Tags:     []*Tag{rootTag},
-		Schemes:  []string{scheme},
+		Schemes:  []string{"http", "https"},
 		Paths:    map[string]map[string]*Opera{},
 		// SecurityDefinitions: map[string]map[string]interface{}{},
 		// Definitions:         map[string]Definition{},
@@ -575,4 +569,17 @@ var mapping2 = map[string]string{
 	"float32": "number",
 	"float64": "number",
 	"string":  "string",
+}
+
+func getScheme(c *lessgo.Context) string {
+	if scheme := c.HeaderParam(lessgo.HeaderXForwardedProto); scheme != "" {
+		return scheme
+	}
+	if c.Request().URL.Scheme != "" {
+		return c.Request().URL.Scheme
+	}
+	if c.Request().TLS == nil {
+		return "http"
+	}
+	return "https"
 }
