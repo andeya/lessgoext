@@ -3,8 +3,8 @@ package gorm
 import (
 	"fmt"
 
-	log "github.com/lessgo/lessgo/logs"
-	"github.com/lessgo/lessgo/logs/logs"
+	log "github.com/henrylee2cn/lessgo/logs"
+	"github.com/henrylee2cn/lessgo/logs/logs"
 )
 
 type ILogger struct {

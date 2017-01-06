@@ -1,7 +1,7 @@
 package datamatrix
 
 import (
-	"github.com/lessgo/lessgoext/barcode/utils"
+	"github.com/henrylee2cn/lessgoext/barcode/utils"
 )
 
 type setValFunc func(byte)

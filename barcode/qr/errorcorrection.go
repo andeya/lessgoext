@@ -1,7 +1,7 @@
 package qr
 
 import (
-	"github.com/lessgo/lessgoext/barcode/utils"
+	"github.com/henrylee2cn/lessgoext/barcode/utils"
 )
 
 type errorCorrection struct {

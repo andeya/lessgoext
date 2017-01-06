@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 var (

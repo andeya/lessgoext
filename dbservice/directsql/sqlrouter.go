@@ -5,7 +5,7 @@ package directsql
 
 /*
 import (
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 	"lessdo/middleware"
 )
 

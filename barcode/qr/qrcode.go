@@ -5,8 +5,8 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/lessgo/lessgoext/barcode"
-	"github.com/lessgo/lessgoext/barcode/utils"
+	"github.com/henrylee2cn/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode/utils"
 )
 
 type qrcode struct {

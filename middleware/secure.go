@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 type (

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/lessgo/lessgoext/barcode"
-	"github.com/lessgo/lessgoext/barcode/utils"
+	"github.com/henrylee2cn/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode/utils"
 )
 
 var encodingTable = map[rune][]bool{

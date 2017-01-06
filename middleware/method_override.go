@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 type (

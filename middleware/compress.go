@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 type (

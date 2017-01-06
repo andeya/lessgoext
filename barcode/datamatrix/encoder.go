@@ -4,7 +4,7 @@ package datamatrix
 import (
 	"errors"
 
-	"github.com/lessgo/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode"
 )
 
 // Encode returns a Datamatrix barcode for the given content

@@ -18,8 +18,8 @@
 package totp
 
 import (
-	"github.com/lessgo/lessgoext/otp"
-	"github.com/lessgo/lessgoext/otp/hotp"
+	"github.com/henrylee2cn/lessgoext/otp"
+	"github.com/henrylee2cn/lessgoext/otp/hotp"
 
 	"crypto/rand"
 	"encoding/base32"

@@ -18,8 +18,8 @@
 package otp
 
 import (
-	"github.com/lessgo/lessgoext/barcode"
-	"github.com/lessgo/lessgoext/barcode/qr"
+	"github.com/henrylee2cn/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode/qr"
 
 	"crypto/md5"
 	"crypto/sha1"

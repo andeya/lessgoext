@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/lessgo/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode"
 )
 
 type test struct {

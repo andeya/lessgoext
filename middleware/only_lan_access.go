@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 var (

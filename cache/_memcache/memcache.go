@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/lessgo/lessgo/cache/memcache"
-//   "github.com/lessgo/lessgo/cache"
+//   _ "github.com/henrylee2cn/lessgo/cache/memcache"
+//   "github.com/henrylee2cn/lessgo/cache"
 // )
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)
@@ -38,7 +38,7 @@ import (
 
 	"time"
 
-	"github.com/lessgo/lessgoext/cache"
+	"github.com/henrylee2cn/lessgoext/cache"
 )
 
 // Cache Memcache adapter.

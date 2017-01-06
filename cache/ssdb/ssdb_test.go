@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lessgo/lessgoext/cache"
+	"github.com/henrylee2cn/lessgoext/cache"
 )
 
 func TestSsdbcacheCache(t *testing.T) {

@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/lessgo/lessgo"
-	confpkg "github.com/lessgo/lessgo/config"
-	"github.com/lessgo/lessgo/utils"
+	"github.com/henrylee2cn/lessgo"
+	confpkg "github.com/henrylee2cn/lessgo/config"
+	"github.com/henrylee2cn/lessgo/utils"
 )
 
 /* 从结构体快速创建自己简单的ini配置。

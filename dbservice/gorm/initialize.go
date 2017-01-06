@@ -7,8 +7,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 
-	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgo/utils"
+	"github.com/henrylee2cn/lessgo"
+	"github.com/henrylee2cn/lessgo/utils"
 )
 
 // 注册数据库服务

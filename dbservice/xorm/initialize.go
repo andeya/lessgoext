@@ -8,8 +8,8 @@ import (
 	"github.com/go-xorm/core"
 	"github.com/go-xorm/xorm"
 
-	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgo/utils"
+	"github.com/henrylee2cn/lessgo"
+	"github.com/henrylee2cn/lessgo/utils"
 )
 
 // 注册数据库服务

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgoext/myconfig"
+	"github.com/henrylee2cn/lessgo"
+	"github.com/henrylee2cn/lessgoext/myconfig"
 )
 
 /*

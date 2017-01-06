@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 type (

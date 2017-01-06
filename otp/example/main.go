@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/lessgo/lessgoext/otp"
-	"github.com/lessgo/lessgoext/otp/totp"
+	"github.com/henrylee2cn/lessgoext/otp"
+	"github.com/henrylee2cn/lessgoext/otp/totp"
 
 	"bufio"
 	"bytes"

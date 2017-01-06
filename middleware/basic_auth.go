@@ -3,7 +3,7 @@ package middleware
 import (
 	"encoding/base64"
 
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 type (

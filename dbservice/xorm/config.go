@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lessgo/lessgo"
-	confpkg "github.com/lessgo/lessgo/config"
+	"github.com/henrylee2cn/lessgo"
+	confpkg "github.com/henrylee2cn/lessgo/config"
 )
 
 type (

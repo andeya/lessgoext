@@ -6,7 +6,7 @@ import (
 	"image/jpeg"
 	"image/png"
 
-	"github.com/lessgo/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode"
 )
 
 // 常见二维码边长

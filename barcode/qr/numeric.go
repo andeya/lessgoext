@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/lessgo/lessgoext/barcode/utils"
+	"github.com/henrylee2cn/lessgoext/barcode/utils"
 )
 
 func encodeNumeric(content string, ecl ErrorCorrectionLevel) (*utils.BitList, *versionInfo, error) {

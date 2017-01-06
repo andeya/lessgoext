@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lessgo/lessgoext/surfer"
+	"github.com/henrylee2cn/lessgoext/surfer"
 	"io/ioutil"
 	"log"
 	"time"

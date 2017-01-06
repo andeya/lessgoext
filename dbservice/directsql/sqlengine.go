@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-xorm/core"
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 //根据sqlid获取 *Sqlentity

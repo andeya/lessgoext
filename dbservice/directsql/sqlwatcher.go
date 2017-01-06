@@ -8,7 +8,7 @@ package directsql
 
 import (
 	"github.com/fsnotify/fsnotify"
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 	"strings"
 )
 

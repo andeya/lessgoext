@@ -4,7 +4,7 @@
 package directsql
 
 import (
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 //DirectSQL handler 定义

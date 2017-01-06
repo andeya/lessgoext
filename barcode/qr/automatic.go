@@ -3,7 +3,7 @@ package qr
 import (
 	"fmt"
 
-	"github.com/lessgo/lessgoext/barcode/utils"
+	"github.com/henrylee2cn/lessgoext/barcode/utils"
 )
 
 func encodeAuto(content string, ecl ErrorCorrectionLevel) (*utils.BitList, *versionInfo, error) {

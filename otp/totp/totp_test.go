@@ -18,7 +18,7 @@
 package totp
 
 import (
-	"github.com/lessgo/lessgoext/otp"
+	"github.com/henrylee2cn/lessgoext/otp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

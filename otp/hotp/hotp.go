@@ -18,7 +18,7 @@
 package hotp
 
 import (
-	"github.com/lessgo/lessgoext/otp"
+	"github.com/henrylee2cn/lessgoext/otp"
 
 	"crypto/hmac"
 	"crypto/rand"

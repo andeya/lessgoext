@@ -5,8 +5,8 @@ import (
 	"io"
 	"sync"
 
-	"github.com/lessgo/lessgo"
-	"github.com/lessgo/lessgoext/bitconv"
+	"github.com/henrylee2cn/lessgo"
+	"github.com/henrylee2cn/lessgoext/bitconv"
 )
 
 type (

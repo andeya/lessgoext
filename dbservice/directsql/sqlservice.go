@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/go-xorm/core"
-	"github.com/lessgo/lessgo"
+	"github.com/henrylee2cn/lessgo"
 )
 
 var notFoundError = func(sqlid string) error {

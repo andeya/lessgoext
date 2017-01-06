@@ -5,7 +5,7 @@ import (
 	"image"
 	"image/color"
 
-	"github.com/lessgo/lessgoext/barcode"
+	"github.com/henrylee2cn/lessgoext/barcode"
 )
 
 type base1DCode struct {
