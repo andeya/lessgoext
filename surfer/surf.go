@@ -26,8 +26,6 @@ import (
 	"net/http/cookiejar"
 	"strings"
 	"time"
-
-	"github.com/henrylee2cn/lessgoext/surfer/agent"
 )
 
 // Default is the default Download implementation.
@@ -41,13 +39,13 @@ func New() Surfer {
 	return s
 }
 
-func (self *Surf) Download(req Request) (resp *http.Response, err error) {
-	param, err := NewParam(req)
+func (self *Surf) Download(param *Request) (*http.Response, error) {
+	err := param.prepare()
 	if err != nil {
 		return nil, err
 	}
 	param.client = self.buildClient(param)
-	resp, err = self.httpRequest(param)
+	resp, err := self.httpRequest(param)
 
 	if err == nil {
 		switch resp.Header.Get("Content-Encoding") {
@@ -70,39 +68,37 @@ func (self *Surf) Download(req Request) (resp *http.Response, err error) {
 		}
 	}
 
-	resp = param.writeback(resp)
-
-	return
+	return param.writeback(resp), err
 }
 
 // buildClient creates, configures, and returns a *http.Client type.
-func (self *Surf) buildClient(param *Param) *http.Client {
+func (self *Surf) buildClient(req *Request) *http.Client {
 	client := &http.Client{
-		CheckRedirect: param.checkRedirect,
+		CheckRedirect: req.checkRedirect,
 	}
 
-	if param.enableCookie {
+	if req.EnableCookie {
 		client.Jar = self.cookieJar
 	}
 
 	transport := &http.Transport{
 		Dial: func(network, addr string) (net.Conn, error) {
-			c, err := net.DialTimeout(network, addr, param.dialTimeout)
+			c, err := net.DialTimeout(network, addr, req.DialTimeout)
 			if err != nil {
 				return nil, err
 			}
-			if param.connTimeout > 0 {
-				c.SetDeadline(time.Now().Add(param.connTimeout))
+			if req.ConnTimeout > 0 {
+				c.SetDeadline(time.Now().Add(req.ConnTimeout))
 			}
 			return c, nil
 		},
 	}
 
-	if param.proxy != nil {
-		transport.Proxy = http.ProxyURL(param.proxy)
+	if req.proxy != nil {
+		transport.Proxy = http.ProxyURL(req.proxy)
 	}
 
-	if strings.ToLower(param.url.Scheme) == "https" {
+	if strings.ToLower(req.url.Scheme) == "https" {
 		transport.TLSClientConfig = &tls.Config{RootCAs: nil, InsecureSkipVerify: true}
 		transport.DisableCompression = true
 	}
@@ -111,38 +107,38 @@ func (self *Surf) buildClient(param *Param) *http.Client {
 }
 
 // send uses the given *http.Request to make an HTTP request.
-func (self *Surf) httpRequest(param *Param) (resp *http.Response, err error) {
-	req, err := http.NewRequest(param.method, param.url.String(), param.body)
+func (self *Surf) httpRequest(param *Request) (resp *http.Response, err error) {
+	req, err := http.NewRequest(param.Method, param.Url, param.body)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header = param.header
+	req.Header = param.Header
 
-	if param.tryTimes <= 0 {
+	if param.TryTimes <= 0 {
 		for {
 			resp, err = param.client.Do(req)
 			if err != nil {
-				if !param.enableCookie {
-					l := len(agent.UserAgents["common"])
+				if !param.EnableCookie {
+					l := len(UserAgents["common"])
 					r := rand.New(rand.NewSource(time.Now().UnixNano()))
-					req.Header.Set("User-Agent", agent.UserAgents["common"][r.Intn(l)])
+					req.Header.Set("User-Agent", UserAgents["common"][r.Intn(l)])
 				}
-				time.Sleep(param.retryPause)
+				time.Sleep(param.RetryPause)
 				continue
 			}
 			break
 		}
 	} else {
-		for i := 0; i < param.tryTimes; i++ {
+		for i := 0; i < param.TryTimes; i++ {
 			resp, err = param.client.Do(req)
 			if err != nil {
-				if !param.enableCookie {
-					l := len(agent.UserAgents["common"])
+				if !param.EnableCookie {
+					l := len(UserAgents["common"])
 					r := rand.New(rand.NewSource(time.Now().UnixNano()))
-					req.Header.Set("User-Agent", agent.UserAgents["common"][r.Intn(l)])
+					req.Header.Set("User-Agent", UserAgents["common"][r.Intn(l)])
 				}
-				time.Sleep(param.retryPause)
+				time.Sleep(param.RetryPause)
 				continue
 			}
 			break

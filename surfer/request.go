@@ -15,38 +15,17 @@
 package surfer
 
 import (
+	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"math/rand"
+	"mime/multipart"
 	"net/http"
+	"net/url"
 	"strings"
-	"sync"
 	"time"
 )
-
-type Request interface {
-	// url
-	GetUrl() string
-	// GET POST POST-M HEAD
-	GetMethod() string
-	// POST values
-	GetPostData() string
-	// http header
-	GetHeader() http.Header
-	// enable http cookies
-	GetEnableCookie() bool
-	// dial tcp: i/o timeout
-	GetDialTimeout() time.Duration
-	// WSARecv tcp: i/o timeout
-	GetConnTimeout() time.Duration
-	// the max times of download
-	GetTryTimes() int
-	// the pause time of retry
-	GetRetryPause() time.Duration
-	// the download ProxyHost
-	GetProxy() string
-	// max redirect times
-	GetRedirectTimes() int
-	// select Surf ro PhomtomJS
-	GetDownloaderID() int
-}
 
 const (
 	SurfID             = 0               // Surf下载器标识符
@@ -58,10 +37,11 @@ const (
 	DefaultRetryPause  = 2 * time.Second // 默认重新下载前停顿时长
 )
 
-// 默认实现的Request
-type DefaultRequest struct {
+// Request contains the necessary prerequisite information.
+type Request struct {
 	// url (必须填写)
 	Url string
+	url *url.URL
 	// GET POST POST-M HEAD (默认为GET)
 	Method string
 	// http header
@@ -69,7 +49,10 @@ type DefaultRequest struct {
 	// 是否使用cookies，在Spider的EnableCookie设置
 	EnableCookie bool
 	// POST values
-	PostData string
+	Values url.Values
+	// POST files
+	Files []PostFile
+	body  io.Reader
 	// dial tcp: i/o timeout
 	DialTimeout time.Duration
 	// WSARecv tcp: i/o timeout
@@ -84,26 +67,33 @@ type DefaultRequest struct {
 	RedirectTimes int
 	// the download ProxyHost
 	Proxy string
-
+	proxy *url.URL
 	// 指定下载器ID
 	// 0为Surf高并发下载器，各种控制功能齐全
 	// 1为PhantomJS下载器，特点破防力强，速度慢，低并发
 	DownloaderID int
-
-	// 保证prepare只调用一次
-	once sync.Once
+	client       *http.Client
 }
 
-func (self *DefaultRequest) prepare() {
-	if self.Method == "" {
-		self.Method = DefaultMethod
-	}
-	self.Method = strings.ToUpper(self.Method)
+// PostFile post form file
+type PostFile struct {
+	Fieldname string
+	Filename  string
+	Bytes     []byte
+}
 
-	if self.Header == nil {
-		self.Header = make(http.Header)
+func (self *Request) prepare() error {
+	var err error
+	self.url, err = UrlEncode(self.Url)
+	if err != nil {
+		return err
 	}
-
+	self.Url = self.url.String()
+	if self.Proxy != "" {
+		if self.proxy, err = url.Parse(self.Proxy); err != nil {
+			return err
+		}
+	}
 	if self.DialTimeout < 0 {
 		self.DialTimeout = 0
 	} else if self.DialTimeout == 0 {
@@ -127,76 +117,87 @@ func (self *DefaultRequest) prepare() {
 	if self.DownloaderID != PhomtomJsID {
 		self.DownloaderID = SurfID
 	}
+
+	if self.Header == nil {
+		self.Header = make(http.Header)
+	}
+	var commonUserAgentIndex int
+	if !self.EnableCookie {
+		commonUserAgentIndex = rand.Intn(len(UserAgents["common"]))
+		self.Header.Set("User-Agent", UserAgents["common"][commonUserAgentIndex])
+	} else if len(self.Header["User-Agent"]) == 0 {
+		self.Header.Set("User-Agent", UserAgents["common"][commonUserAgentIndex])
+	}
+
+	self.Method = strings.ToUpper(self.Method)
+	switch self.Method {
+	case "POST", "PUT", "PATCH", "DELETE":
+		if len(self.Files) > 0 {
+			pr, pw := io.Pipe()
+			bodyWriter := multipart.NewWriter(pw)
+			go func() {
+				for _, postfile := range self.Files {
+					fileWriter, err := bodyWriter.CreateFormFile(postfile.Fieldname, postfile.Filename)
+					if err != nil {
+						log.Println("[E] Surfer: Multipart:", err)
+					}
+					_, err = fileWriter.Write(postfile.Bytes)
+					if err != nil {
+						log.Println("[E] Surfer: Multipart:", err)
+					}
+				}
+				for k, v := range self.Values {
+					for _, vv := range v {
+						bodyWriter.WriteField(k, vv)
+					}
+				}
+				bodyWriter.Close()
+				pw.Close()
+			}()
+			self.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+			self.body = ioutil.NopCloser(pr)
+		} else {
+			self.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			self.body = strings.NewReader(self.Values.Encode())
+		}
+
+	default:
+		if len(self.Method) == 0 {
+			self.Method = DefaultMethod
+		}
+	}
+
+	return nil
 }
 
-// url
-func (self *DefaultRequest) GetUrl() string {
-	self.once.Do(self.prepare)
-	return self.Url
+// 回写Request内容
+func (self *Request) writeback(resp *http.Response) *http.Response {
+	if resp == nil {
+		resp = new(http.Response)
+		resp.Request = new(http.Request)
+	} else if resp.Request == nil {
+		resp.Request = new(http.Request)
+	}
+
+	resp.Request.Method = self.Method
+	resp.Request.Header = self.Header
+	resp.Request.Host = self.url.Host
+
+	return resp
 }
 
-// GET POST POST-M HEAD
-func (self *DefaultRequest) GetMethod() string {
-	self.once.Do(self.prepare)
-	return self.Method
-}
-
-// POST values
-func (self *DefaultRequest) GetPostData() string {
-	self.once.Do(self.prepare)
-	return self.PostData
-}
-
-// http header
-func (self *DefaultRequest) GetHeader() http.Header {
-	self.once.Do(self.prepare)
-	return self.Header
-}
-
-// enable http cookies
-func (self *DefaultRequest) GetEnableCookie() bool {
-	self.once.Do(self.prepare)
-	return self.EnableCookie
-}
-
-// dial tcp: i/o timeout
-func (self *DefaultRequest) GetDialTimeout() time.Duration {
-	self.once.Do(self.prepare)
-	return self.DialTimeout
-}
-
-// WSARecv tcp: i/o timeout
-func (self *DefaultRequest) GetConnTimeout() time.Duration {
-	self.once.Do(self.prepare)
-	return self.ConnTimeout
-}
-
-// the max times of download
-func (self *DefaultRequest) GetTryTimes() int {
-	self.once.Do(self.prepare)
-	return self.TryTimes
-}
-
-// the pause time of retry
-func (self *DefaultRequest) GetRetryPause() time.Duration {
-	self.once.Do(self.prepare)
-	return self.RetryPause
-}
-
-// the download ProxyHost
-func (self *DefaultRequest) GetProxy() string {
-	self.once.Do(self.prepare)
-	return self.Proxy
-}
-
-// max redirect times
-func (self *DefaultRequest) GetRedirectTimes() int {
-	self.once.Do(self.prepare)
-	return self.RedirectTimes
-}
-
-// select Surf ro PhomtomJS
-func (self *DefaultRequest) GetDownloaderID() int {
-	self.once.Do(self.prepare)
-	return self.DownloaderID
+// checkRedirect is used as the value to http.Client.CheckRedirect
+// when redirectTimes equal 0, redirect times is ∞
+// when redirectTimes less than 0, not allow redirects
+func (self *Request) checkRedirect(req *http.Request, via []*http.Request) error {
+	if self.RedirectTimes == 0 {
+		return nil
+	}
+	if len(via) >= self.RedirectTimes {
+		if self.RedirectTimes < 0 {
+			return fmt.Errorf("not allow redirects.")
+		}
+		return fmt.Errorf("stopped after %v redirects.", self.RedirectTimes)
+	}
+	return nil
 }

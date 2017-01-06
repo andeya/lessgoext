@@ -1,21 +1,17 @@
-# surfer    [![GoDoc](https://godoc.org/github.com/tsuna/gohbase?status.png)](https://godoc.org/github.com/henrylee2cn/surfer) [![GitHub release](https://img.shields.io/github/release/henrylee2cn/surfer.svg)](https://github.com/henrylee2cn/surfer/releases)
+# Surfer    [![GoDoc](https://godoc.org/github.com/tsuna/gohbase?status.png)](https://godoc.org/github.com/henrylee2cn/surfer) [![GitHub release](https://img.shields.io/github/release/henrylee2cn/surfer.svg)](https://github.com/henrylee2cn/surfer/releases)
 
-A high level concurrency downloader.
+Package surfer is a high level concurrency http client.
+It has `surf` and` phantom` download engines, highly simulated browser behavior, the function of analog login and so on.
 
-</br>
-surfer是一款Go语言编写的高并发 web 下载器，拥有surf与phantom两种下载内核。
+[简体中文](https://github.com/henrylee2cn/surfer/blob/master/README_ZH.md)
 
-</br>
-支持固定UserAgent自动保存cookie与随机大量UserAgent禁用cookie两种模式，高度模拟浏览器行为，可实现模拟登录等功能。
+## Features
+- Both `surf` and `phantomjs` engines are supported
+- Support random User-Agent
+- Support cache cookie
+- Support http/https
 
-</br>
-高并发爬虫[Pholcus](https://github.com/henrylee2cn/pholcus)的专用下载器。（官方QQ群：Go大数据 42731170，欢迎加入我们的讨论）
-</br>
-
-
-
-### Usage
-
+## Usage
 ```
 package main
 
@@ -26,8 +22,8 @@ import (
 )
 
 func main() {
-    // 默认使用surf内核下载
-    resp, err := surfer.Download(&surfer.DefaultRequest{
+    // Use surf engine
+    resp, err := surfer.Download(&surfer.Request{
         Url: "http://github.com/henrylee2cn/surfer",
     })
     if err != nil {
@@ -36,8 +32,8 @@ func main() {
     b, err := ioutil.ReadAll(resp.Body)
     log.Println(string(b), err)
 
-    // 指定使用phantomjs内核下载
-    resp, err = surfer.Download(&surfer.DefaultRequest{
+    // Use phantomjs engine
+    resp, err = surfer.Download(&surfer.Request{
         Url:          "http://github.com/henrylee2cn",
         DownloaderID: 1,
     })
@@ -51,11 +47,8 @@ func main() {
     surfer.DestroyJsFiles()
 }
 ```
+[Full example](https://github.com/henrylee2cn/thinkgo/raw/master/samples)
 
-详情参考：[example.go](https://github.com/henrylee2cn/surfer/blob/master/example/example.go)
+## License
 
-&nbsp;
-
-#### 开源协议
-
-surfer项目采用商业应用友好的[Apache License v2](https://github.com/henrylee2cn/surfer/raw/master/LICENSE).发布
+Surfer is under Apache v2 License. See the [LICENSE](https://github.com/henrylee2cn/thinkgo/raw/master/LICENSE) file for the full license text.

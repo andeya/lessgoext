@@ -1,37 +1,81 @@
-// Copyright 2015 henrylee2cn Author. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*Copyright 2015 henrylee2cn Author. All Rights Reserved.
 
-// surfer是一款Go语言编写的高并发爬虫下载器，支持 GET/POST/HEAD 方法及 http/https 协议，同时支持固定UserAgent自动保存cookie与随机大量UserAgent禁用cookie两种模式，高度模拟浏览器行为，可实现模拟登录等功能。
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Package surfer is a high level concurrency http client.
+It has `surf` and` phantom` download engines, highly simulated browser behavior, the function of analog login and so on.
+Features:
+- Both surf and phantomjs engines are supported
+- Support random User-Agent
+- Support cache cookie
+- Support http/https
+
+Usage:
+package main
+
+import (
+    "github.com/henrylee2cn/surfer"
+    "io/ioutil"
+    "log"
+)
+
+func main() {
+    // Use surf engine
+    resp, err := surfer.Download(&surfer.Request{
+        Url: "http://github.com/henrylee2cn/surfer",
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    b, err := ioutil.ReadAll(resp.Body)
+    log.Println(string(b), err)
+
+    // Use phantomjs engine
+    resp, err = surfer.Download(&surfer.Request{
+        Url:          "http://github.com/henrylee2cn",
+        DownloaderID: 1,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
+    b, err = ioutil.ReadAll(resp.Body)
+    log.Println(string(b), err)
+
+    resp.Body.Close()
+    surfer.DestroyJsFiles()
+}*/
 package surfer
 
 import (
 	"net/http"
-	"os"
 	"sync"
+	// "os"
+	// "path"
+	// "path/filepath"
 )
 
 var (
-	surf          Surfer
-	phantom       Surfer
-	once_surf     sync.Once
-	once_phantom  sync.Once
-	tempJsDir     = "./tmp"
-	phantomjsFile = os.Getenv("GOPATH") + `\src\github.com\henrylee2cn\surfer\phantomjs\phantomjs`
+	surf         Surfer
+	phantom      Surfer
+	once_surf    sync.Once
+	once_phantom sync.Once
+	tempJsDir    = "./tmp"
+	// phantomjsFile = filepath.Clean(path.Join(os.Getenv("GOPATH"), `/src/github.com/henrylee2cn/surfer/phantomjs/phantomjs`))
+	phantomjsFile = `./phantomjs`
 )
 
-func Download(req Request) (resp *http.Response, err error) {
-	switch req.GetDownloaderID() {
+func Download(req *Request) (resp *http.Response, err error) {
+	switch req.DownloaderID {
 	case SurfID:
 		once_surf.Do(func() { surf = New() })
 		resp, err = surf.Download(req)
@@ -55,5 +99,5 @@ type Surfer interface {
 	// HEAD @param url string, header http.Header, cookies []*http.Cookie
 	// POST PostForm @param url, referer string, values url.Values, header http.Header, cookies []*http.Cookie
 	// POST-M PostMultipart @param url, referer string, values url.Values, header http.Header, cookies []*http.Cookie
-	Download(Request) (resp *http.Response, err error)
+	Download(*Request) (resp *http.Response, err error)
 }
